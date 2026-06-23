@@ -1,0 +1,644 @@
+/**
+ * 🚀 Gmail Task Manager v3.1 (Stable & Button Compatible)
+ * -------------------------------------------------------
+ * אותה גרסה 3.0 חזקה, אבל עם שם הפונקציה הישן (V2)
+ * כדי שהכפתור שלך ימשיך לעבוד בלי שגיאות.
+ */
+
+function onOpen() {
+  const ui = SpreadsheetApp.getUi();
+  ui.createMenu('ניהול משימות')
+      .addItem('🔄 סנכרן מיילים (Refresh)', 'syncGmailToSheetsV2') // הותאם לשם הפונקציה
+      .addItem('🎨 כפה צביעה מחדש', 'applyColors')
+      .addSeparator()
+      .addItem('📧 שלח סיכום עכשיו', 'sendDailySummary')
+      .addSeparator()
+      .addItem('⏰ הפעל סנכרון אוטומטי (כל שעה)', 'enableAutoSync')
+      .addItem('⏹️ בטל סנכרון אוטומטי', 'disableAutoSync')
+      .addSeparator()
+      .addItem('📧 הפעל סיכום יומי (08:00)', 'enableDailySummary')
+      .addItem('🔕 בטל סיכום יומי', 'disableDailySummary')
+      .addSeparator()
+      .addItem('🌐 הצג כתובת ה-Web App', 'showWebAppUrl')
+      .addToUi();
+}
+
+/** מציג את כתובת ה-Web App (אחרי שפרסמת אותו דרך Deploy). */
+function showWebAppUrl() {
+  const url = ScriptApp.getService().getUrl();
+  const ui = SpreadsheetApp.getUi();
+  if (url) {
+    ui.alert('🌐 כתובת ה-Web App', url + '\n\nהעתק את הכתובת ופתח אותה בדפדפן (או הוסף למסך הבית בטלפון).', ui.ButtonSet.OK);
+  } else {
+    ui.alert('עדיין לא פרסמת את ה-Web App. ב-Apps Script: Deploy → New deployment → Web app.');
+  }
+}
+
+/* =====================================================================
+ *  אוטומציה: טריגרים מבוססי-זמן (רצים גם כשהגיליון סגור)
+ * ===================================================================== */
+
+/**
+ * עוזר פנימי: מוחק את כל הטריגרים שמפעילים פונקציה מסוימת.
+ * מונע כפילויות כשמפעילים אוטומציה פעמיים.
+ */
+function deleteTriggersFor_(functionName) {
+  let count = 0;
+  ScriptApp.getProjectTriggers().forEach(t => {
+    if (t.getHandlerFunction() === functionName) {
+      ScriptApp.deleteTrigger(t);
+      count++;
+    }
+  });
+  return count;
+}
+
+/** מפעיל סנכרון אוטומטי כל שעה. */
+function enableAutoSync() {
+  deleteTriggersFor_('syncGmailToSheetsV2'); // ניקוי קודם — בלי כפילויות
+  ScriptApp.newTrigger('syncGmailToSheetsV2')
+    .timeBased()
+    .everyHours(1)
+    .create();
+  SpreadsheetApp.getUi().alert('✅ סנכרון אוטומטי הופעל — הסקריפט יסתנכרן כל שעה, גם כשהגיליון סגור.');
+}
+
+/** מבטל את הסנכרון האוטומטי. */
+function disableAutoSync() {
+  const n = deleteTriggersFor_('syncGmailToSheetsV2');
+  SpreadsheetApp.getUi().alert(n > 0
+    ? '⏹️ הסנכרון האוטומטי בוטל.'
+    : 'לא היה סנכרון אוטומטי פעיל.');
+}
+
+/** מפעיל מייל סיכום יומי ב-08:00 (לפי אזור הזמן של הפרויקט). */
+function enableDailySummary() {
+  deleteTriggersFor_('sendDailySummary');
+  ScriptApp.newTrigger('sendDailySummary')
+    .timeBased()
+    .everyDays(1)
+    .atHour(8)
+    .create();
+  SpreadsheetApp.getUi().alert('✅ סיכום יומי הופעל — תקבל מייל כל בוקר בסביבות 08:00.');
+}
+
+/** מבטל את הסיכום היומי. */
+function disableDailySummary() {
+  const n = deleteTriggersFor_('sendDailySummary');
+  SpreadsheetApp.getUi().alert(n > 0
+    ? '🔕 הסיכום היומי בוטל.'
+    : 'לא היה סיכום יומי פעיל.');
+}
+
+/* =====================================================================
+ *  מייל סיכום יומי
+ * ===================================================================== */
+
+/**
+ * בונה ושולח מייל HTML עם כל המשימות הפתוחות, מקובצות לפי קטגוריה.
+ * מדגיש משימות באיחור (תאריך יעד שעבר) ומשימות דחופות.
+ * נשלח לחשבון שמריץ את הסקריפט — נייד לכל מקום.
+ */
+function sendDailySummary() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('משימות');
+  const recipient = Session.getEffectiveUser().getEmail();
+  const subjectLine = '📋 סיכום משימות יומי — ' +
+    Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'dd/MM/yyyy');
+
+  // אין גיליון או אין נתונים → שולחים הודעת "אין משימות".
+  if (!sheet || sheet.getLastRow() < 2) {
+    MailApp.sendEmail({ to: recipient, subject: subjectLine, htmlBody: emptyStateHtml_() });
+    return;
+  }
+
+  const data = sheet.getRange(2, 1, sheet.getLastRow() - 1, 8).getValues();
+
+  // אזור זמן + תחילת היום (להשוואת איחור)
+  const tz = Session.getScriptTimeZone();
+  const todayStr = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd');
+
+  // קיבוץ לפי קטגוריה, רק מה שלא DONE
+  const groups = {};            // category -> [{task, status, urgency, due, overdue}]
+  let countOpen = 0, countInProgress = 0, countDependent = 0;
+
+  data.forEach(row => {
+    const category = String(row[1] || '').trim();
+    const task = String(row[2] || '').trim();
+    const status = String(row[3] || '').toUpperCase().trim();
+    const urgency = String(row[4] || '').trim();
+    const dueRaw = row[5];
+
+    if (status === 'DONE' || !task) return;
+
+    if (status === 'OPEN') countOpen++;
+    else if (status === 'IN PROGRESS') countInProgress++;
+    else if (status === 'DEPENDENT') countDependent++;
+
+    // חישוב איחור: אם תאריך היעד הוא תאריך תקין שעבר
+    let dueStr = '';
+    let overdue = false;
+    if (dueRaw instanceof Date) {
+      dueStr = Utilities.formatDate(dueRaw, tz, 'dd/MM/yyyy');
+      overdue = Utilities.formatDate(dueRaw, tz, 'yyyy-MM-dd') < todayStr;
+    } else if (dueRaw) {
+      dueStr = String(dueRaw).trim();
+    }
+
+    const key = category || '(ללא קטגוריה)';
+    if (!groups[key]) groups[key] = [];
+    groups[key].push({ task, status, urgency, due: dueStr, overdue });
+  });
+
+  const totalOpen = countOpen + countInProgress + countDependent;
+  if (totalOpen === 0) {
+    MailApp.sendEmail({ to: recipient, subject: subjectLine, htmlBody: emptyStateHtml_() });
+    return;
+  }
+
+  const html = buildSummaryHtml_(groups, { countOpen, countInProgress, countDependent, totalOpen });
+  MailApp.sendEmail({ to: recipient, subject: subjectLine, htmlBody: html });
+}
+
+/** HTML למצב "אין משימות פתוחות". */
+function emptyStateHtml_() {
+  return '<div style="font-family:Arial,Helvetica,sans-serif;direction:rtl;text-align:right;' +
+    'padding:24px;color:#202124;">' +
+    '<h2 style="margin:0 0 8px;">אין משימות פתוחות 🎉</h2>' +
+    '<p style="color:#5f6368;margin:0;">כל המשימות סגורות. תהנה מהיום!</p></div>';
+}
+
+/** בונה את גוף ה-HTML של הסיכום. */
+function buildSummaryHtml_(groups, stats) {
+  const statusColors = {
+    'OPEN': '#cfe2f3',
+    'IN PROGRESS': '#1155cc',
+    'DEPENDENT': '#595959',
+  };
+  const statusTextColors = { 'OPEN': '#202124', 'IN PROGRESS': '#ffffff', 'DEPENDENT': '#ffffff' };
+  const statusLabels = { 'OPEN': 'פתוח', 'IN PROGRESS': 'בתהליך', 'DEPENDENT': 'תלוי' };
+
+  let html = '<div style="font-family:Arial,Helvetica,sans-serif;direction:rtl;text-align:right;' +
+    'max-width:640px;margin:0 auto;padding:24px;color:#202124;">';
+
+  // כותרת + ספירות
+  html += '<h2 style="margin:0 0 4px;">📋 סיכום משימות יומי</h2>';
+  html += '<p style="color:#5f6368;margin:0 0 16px;">יש לך <b>' + stats.totalOpen +
+    '</b> משימות פתוחות &nbsp;·&nbsp; פתוחות: ' + stats.countOpen +
+    ' &nbsp;·&nbsp; בתהליך: ' + stats.countInProgress +
+    ' &nbsp;·&nbsp; תלויות: ' + stats.countDependent + '</p>';
+
+  // קטגוריות
+  Object.keys(groups).sort().forEach(category => {
+    const items = groups[category];
+    html += '<div style="margin:18px 0 6px;font-size:15px;font-weight:bold;border-bottom:2px solid #e0e0e0;' +
+      'padding-bottom:4px;">' + escapeHtml_(category) + ' <span style="color:#9aa0a6;font-weight:normal;">(' +
+      items.length + ')</span></div>';
+
+    html += '<table style="width:100%;border-collapse:collapse;font-size:14px;">';
+    items.forEach(it => {
+      const badgeBg = statusColors[it.status] || '#eeeeee';
+      const badgeFg = statusTextColors[it.status] || '#202124';
+      const badge = '<span style="background:' + badgeBg + ';color:' + badgeFg +
+        ';border-radius:10px;padding:2px 8px;font-size:12px;white-space:nowrap;">' +
+        (statusLabels[it.status] || it.status) + '</span>';
+
+      let meta = '';
+      if (it.due) {
+        meta += it.overdue
+          ? ' <span style="color:#d93025;font-weight:bold;">⚠ באיחור: ' + escapeHtml_(it.due) + '</span>'
+          : ' <span style="color:#5f6368;">📅 ' + escapeHtml_(it.due) + '</span>';
+      }
+      if (it.urgency) meta += ' <span style="color:#5f6368;">· ' + escapeHtml_(it.urgency) + '</span>';
+
+      html += '<tr style="border-bottom:1px solid #f1f3f4;">' +
+        '<td style="padding:6px 0;vertical-align:top;">' + escapeHtml_(it.task) + meta + '</td>' +
+        '<td style="padding:6px 0;text-align:left;vertical-align:top;white-space:nowrap;">' + badge + '</td>' +
+        '</tr>';
+    });
+    html += '</table>';
+  });
+
+  html += '<p style="color:#9aa0a6;font-size:12px;margin-top:24px;">נשלח אוטומטית ממנהל המשימות ב-Google Sheets.</p>';
+  html += '</div>';
+  return html;
+}
+
+/** בריחת תווים מיוחדים ל-HTML (מונע שבירת עיצוב). */
+function escapeHtml_(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/* =====================================================================
+ *  Web App — תצוגה אינטראקטיבית לטבלת המשימות
+ *  פרסום: Deploy → New deployment → Web app → Execute as: Me →
+ *          Who has access: Anyone with the link → Deploy → אשר הרשאות.
+ *  קובץ ה-HTML חייב להיקרא "WebApp" בפרויקט (ראה WebApp.html).
+ * ===================================================================== */
+
+/** נקודת הכניסה של ה-Web App. */
+function doGet(e) {
+  // רשת ביטחון אופציונלית: אם הוגדר ACCESS_TOKEN ב-Script Properties,
+  // הדף ייפתח רק עם הכתובת ...?token=<הטוקן>.
+  const token = PropertiesService.getScriptProperties().getProperty('ACCESS_TOKEN');
+  if (token) {
+    const given = e && e.parameter ? e.parameter.token : '';
+    if (given !== token) {
+      return HtmlService.createHtmlOutput(
+        '<div style="font-family:Arial;direction:rtl;text-align:center;padding:48px;color:#5f6368;">' +
+        '<h2>🔒 גישה נדחתה</h2><p>חסר טוקן גישה תקין בכתובת.</p></div>');
+    }
+  }
+  return HtmlService.createHtmlOutputFromFile('WebApp')
+    .setTitle('מיק')
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1')
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+/** עוזר: מחזיר את הגיליון, גם בהקשר Web App. */
+function getSpreadsheet_() {
+  const active = SpreadsheetApp.getActiveSpreadsheet();
+  if (active) return active;
+  const id = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');
+  if (id) return SpreadsheetApp.openById(id);
+  throw new Error('לא נמצא גיליון. הגדר SPREADSHEET_ID ב-Script Properties.');
+}
+
+/** עוזר: מאתר שורה לפי Task ID (עמודה A) — יציב גם אם נוספו שורות. */
+function findRowByTaskId_(sheet, taskId) {
+  const last = sheet.getLastRow();
+  if (last < 2) return -1;
+  const ids = sheet.getRange(2, 1, last - 1, 1).getValues();
+  for (let i = 0; i < ids.length; i++) {
+    if (String(ids[i][0]) === String(taskId)) return i + 2;
+  }
+  return -1;
+}
+
+/** מחזיר ל-Web App את כל המשימות + מפת צבעי הקטגוריות. */
+function getTasksForWeb() {
+  const ss = getSpreadsheet_();
+  const sheet = ss.getSheetByName('משימות');
+
+  const colors = {};
+  const cs = ss.getSheetByName('צבעים');
+  if (cs && cs.getLastRow() > 1) {
+    cs.getRange(2, 1, cs.getLastRow() - 1, 2).getValues().forEach(r => {
+      if (r[0]) colors[String(r[0])] = r[1];
+    });
+  }
+
+  if (!sheet || sheet.getLastRow() < 2) return { tasks: [], colors: colors };
+
+  const data = sheet.getRange(2, 1, sheet.getLastRow() - 1, 8).getValues();
+  const tz = Session.getScriptTimeZone();
+  const todayStr = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd');
+
+  const tasks = data.map(row => {
+    const dueRaw = row[5];
+    let due = '', overdue = false;
+    if (dueRaw instanceof Date) {
+      due = Utilities.formatDate(dueRaw, tz, 'yyyy-MM-dd');
+      overdue = due < todayStr;
+    } else if (dueRaw) {
+      due = String(dueRaw).trim();
+    }
+    return {
+      id: String(row[0]),
+      category: String(row[1] || ''),
+      task: String(row[2] || ''),
+      status: String(row[3] || 'OPEN').toUpperCase().trim() || 'OPEN',
+      urgency: String(row[4] || ''),
+      due: due,
+      overdue: overdue,
+      notes: String(row[6] || ''),
+      threadId: String(row[7] || '')
+    };
+  }).filter(t => t.task);
+
+  return { tasks: tasks, colors: colors };
+}
+
+/**
+ * מעדכן סטטוס של משימה (לפי Task ID) וצובע מחדש.
+ * הערה: כאן לא מוחקים את המייל לאשפה גם אם DONE — כדי לאפשר "ביטול" (Undo)
+ * מצד הלקוח בלי שהמייל ימחק מיד. מחיקת מיילים של DONE מתבצעת בסנכרון הרגיל.
+ */
+function webUpdateStatus(taskId, newStatus) {
+  const ss = getSpreadsheet_();
+  const sheet = ss.getSheetByName('משימות');
+  const row = findRowByTaskId_(sheet, taskId);
+  if (row < 0) throw new Error('המשימה לא נמצאה (ייתכן שסונכרנה מחדש).');
+  sheet.getRange(row, 4).setValue(newStatus);
+  applyColors(sheet, ss);
+  return true;
+}
+
+/** עדכון סטטוס לכמה משימות בבת אחת (Bulk). מקבל מערך מזהים. */
+function webBulkUpdateStatus(taskIds, newStatus) {
+  const ss = getSpreadsheet_();
+  const sheet = ss.getSheetByName('משימות');
+  (taskIds || []).forEach(id => {
+    const row = findRowByTaskId_(sheet, id);
+    if (row > 0) sheet.getRange(row, 4).setValue(newStatus);
+  });
+  applyColors(sheet, ss);
+  return true;
+}
+
+/**
+ * הוספת משימה חדשה ידנית מתוך ה-Web App (לא ממייל).
+ * נכתבת בראש הטבלה, בלי Thread ID.
+ */
+function webAddTask(category, task, priority, due, notes) {
+  category = String(category || '').trim();
+  task = String(task || '').trim();
+  if (!task) throw new Error('חסר שם משימה.');
+  const ss = getSpreadsheet_();
+  const sheet = ss.getSheetByName('משימות');
+
+  // מזהה ייחודי — אם כבר קיים, מוסיפים סיומת קצרה.
+  let taskId = category ? (category + ' - ' + task) : task;
+  if (findRowByTaskId_(sheet, taskId) > 0) {
+    taskId = taskId + ' #' + String(new Date().getTime()).slice(-4);
+  }
+
+  let dueVal = '';
+  if (due) { try { dueVal = new Date(due); } catch (e) { dueVal = due; } }
+
+  const newRow = [taskId, category, task, 'OPEN', String(priority || ''), dueVal, String(notes || ''), ''];
+  sheet.insertRowsBefore(2, 1);
+  sheet.getRange(2, 1, 1, 8).setValues([newRow]);
+  applyColors(sheet, ss);
+  return getTasksForWeb();
+}
+
+/** מעדכן שדה טקסט/תאריך של משימה. field: 'urgency' | 'due' | 'notes'. */
+function webUpdateField(taskId, field, value) {
+  const colByField = { urgency: 5, due: 6, notes: 7 };
+  const col = colByField[field];
+  if (!col) throw new Error('שדה לא חוקי: ' + field);
+  const ss = getSpreadsheet_();
+  const sheet = ss.getSheetByName('משימות');
+  const row = findRowByTaskId_(sheet, taskId);
+  if (row < 0) throw new Error('המשימה לא נמצאה (ייתכן שסונכרנה מחדש).');
+  if (field === 'due' && value) {
+    sheet.getRange(row, col).setValue(new Date(value));
+  } else {
+    sheet.getRange(row, col).setValue(value);
+  }
+  return true;
+}
+
+/**
+ * עדכון כמה שדות של משימה בבת אחת (מפאנל העריכה / גרירה).
+ * fields יכול לכלול: category, task, status, priority, due, notes.
+ * חשוב: עמודת ה-Task ID (A) נשארת קבועה — כדי שסנכרון Gmail לא ייצור כפילויות.
+ */
+function webUpdateTask(taskId, fields) {
+  fields = fields || {};
+  const ss = getSpreadsheet_();
+  const sheet = ss.getSheetByName('משימות');
+  const row = findRowByTaskId_(sheet, taskId);
+  if (row < 0) throw new Error('המשימה לא נמצאה (ייתכן שסונכרנה מחדש).');
+  const rng = sheet.getRange(row, 1, 1, 8);
+  const v = rng.getValues()[0]; // [id, cat, task, status, priority, due, notes, thread]
+  if (fields.category !== undefined) v[1] = fields.category;
+  if (fields.task !== undefined)     v[2] = fields.task;
+  if (fields.status !== undefined)   v[3] = fields.status;
+  if (fields.priority !== undefined) v[4] = fields.priority;
+  if (fields.due !== undefined)      v[5] = fields.due ? new Date(fields.due) : '';
+  if (fields.notes !== undefined)    v[6] = fields.notes;
+  rng.setValues([v]); // עמודה A (v[0]) לא משתנה
+  applyColors(sheet, ss);
+  return true;
+}
+
+/** מריץ סנכרון Gmail מתוך ה-Web App ומחזיר את הרשימה המעודכנת. */
+function webRunSync() {
+  syncGmailToSheetsV2();
+  return getTasksForWeb();
+}
+
+/** שולח את מייל הסיכום מתוך ה-Web App. */
+function webSendSummary() {
+  sendDailySummary();
+  return true;
+}
+
+// שמרתי על השם V2 כדי שהכפתור שלך יעבוד, אבל הלוגיקה היא של v3.0
+function syncGmailToSheetsV2() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName("משימות");
+  
+  // הגדרת הכותרות הקבועות
+  const headers = ["Task ID", "קטגוריה", "משימה", "סטטוס", "דחיפות", "תאריך יעד", "הערות", "Thread ID"];
+
+  // 1. יצירת גיליון אם לא קיים
+  if (!sheet) {
+    sheet = ss.insertSheet("משימות");
+  }
+
+  // --- שלב א': תחזוקת גיליון (כותרות ועיצוב) ---
+  sheet.getRange(1, 1, 1, headers.length)
+       .setValues([headers])
+       .setFontWeight("bold")
+       .setBackground("#e0e0e0")
+       .setBorder(true, true, true, true, true, true);
+       
+  sheet.setFrozenRows(1);
+  
+  // הסתרת עמודות טכניות
+  sheet.hideColumns(1); // Task ID
+  sheet.hideColumns(8); // Thread ID
+
+  // הגדרת Dropdown לעמודת הסטטוס (D)
+  const maxRows = Math.max(sheet.getMaxRows(), 100);
+  const rule = SpreadsheetApp.newDataValidation()
+    .requireValueInList(['OPEN', 'IN PROGRESS', 'DEPENDENT', 'DONE'], true)
+    .build();
+  sheet.getRange(2, 4, maxRows - 1, 1).setDataValidation(rule);
+
+
+  // --- שלב ב': קריאת המצב הקיים (Stateful) ---
+  let existingMap = new Map();
+  const lastRow = sheet.getLastRow();
+
+  if (lastRow > 1) {
+    const existingData = sheet.getRange(2, 1, lastRow - 1, 8).getValues();
+    existingData.forEach((row, index) => {
+      const taskId = String(row[0]); 
+      existingMap.set(taskId, {
+        rowIndex: index + 2,
+        status: row[3], // עמודה D
+        threadId: row[7] // עמודה H
+      });
+    });
+  }
+
+  // --- שלב ג': שליפת מיילים מ-Gmail ---
+  const threads = GmailApp.search('label:MyTasks -in:trash');
+  const activeThreadIds = new Set(); 
+  const newRows = [];
+
+  console.log(`נמצאו ${threads.length} מיילים בתגית MyTasks`);
+
+  threads.forEach(thread => {
+    const threadId = thread.getId();
+    activeThreadIds.add(threadId);
+    
+    const message = thread.getMessages()[0];
+    let subject = message.getSubject();
+    
+    // ניקוי תחיליות
+    subject = subject.replace(/^(Re|Fwd|RE|FWD|הועבר|תשובה|Re: Re):\s*/gi, "").trim();
+    
+    // בדיקת מבנה: "נושא - משימה"
+    const parts = subject.split(" - ");
+    if (parts.length < 2) return;
+    
+    let category = parts[0].trim();
+    const taskName = parts.slice(1).join(" - ").trim();
+    
+    // בדיקת עברית (חובה)
+    const fullText = category + taskName;
+    if (!/[\u0590-\u05FF]/.test(fullText)) return;
+    
+    // סינוני זבל
+    if (category.includes(":") || category.toLowerCase().includes("invitation")) return;
+    if (category.length > 25 || category.length < 2) return;
+    
+    const taskId = `${category} - ${taskName}`;
+
+    // מניעת כפילויות
+    if (existingMap.has(taskId)) return;
+
+    // הוספה למאגר
+    newRows.push([
+      taskId, category, taskName, "OPEN", "", "", "", threadId
+    ]);
+  });
+
+  // --- שלב ד': כתיבת משימות חדשות ---
+  if (newRows.length > 0) {
+    sheet.insertRowsBefore(2, newRows.length);
+    sheet.getRange(2, 1, newRows.length, 8).setValues(newRows);
+  }
+
+  // --- שלב ה': סנכרון דו-כיווני ---
+  const fullDataRange = sheet.getDataRange();
+  if (fullDataRange.getLastRow() < 2) {
+    return;
+  }
+  
+  const currentData = sheet.getRange(2, 1, fullDataRange.getLastRow() - 1, 8).getValues();
+
+  for (let i = 0; i < currentData.length; i++) {
+    const row = currentData[i];
+    const rowIndex = i + 2;
+    const status = row[3]; // עמודה D
+    const tId = row[7];    // עמודה H
+
+    // 1. שיטס -> מייל (מחיקה לאשפה אם DONE)
+    if (status === 'DONE' && tId) {
+      try {
+        const threadToArchive = GmailApp.getThreadById(tId);
+        if (threadToArchive && !threadToArchive.isInTrash()) {
+          threadToArchive.moveToTrash();
+        }
+      } catch (e) {}
+    }
+
+    // 2. מייל -> שיטס (סימון DONE אם המייל נעלם מ-MyTasks)
+    if (status !== 'DONE' && tId && !activeThreadIds.has(tId)) {
+      sheet.getRange(rowIndex, 4).setValue('DONE');
+    }
+  }
+
+  // --- שלב ו': החלת צבעים ---
+  applyColors(sheet, ss);
+}
+
+/**
+ * פונקציית העיצוב הראשית
+ */
+function applyColors(sheet, ss) {
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) return;
+
+  let colorSheet = ss.getSheetByName("צבעים");
+  if (!colorSheet) {
+    colorSheet = ss.insertSheet("צבעים");
+    colorSheet.appendRow(["קטגוריה", "צבע"]);
+  }
+
+  const colorData = colorSheet.getDataRange().getValues();
+  const dynamicCategoryColors = {};
+  for (let i = 1; i < colorData.length; i++) {
+    if (colorData[i][0]) dynamicCategoryColors[colorData[i][0]] = colorData[i][1];
+  }
+
+  const colorsToUse = [
+    "#f28b82", "#fbbc04", "#fff475", "#ccff90", "#a7ffeb",
+    "#cbf0f8", "#aecbfa", "#d7aefb", "#fdcfe8", "#e6c9a8"
+  ];
+
+  const range = sheet.getRange(2, 1, lastRow - 1, 8);
+  const values = range.getValues();
+  
+  const backgrounds = [];
+  const fontColors = [];
+
+  values.forEach(row => {
+    const category = row[1];
+    const status = String(row[3]).toUpperCase();
+    
+    // צבע בסיס
+    let rowBaseColor = "#ffffff"; 
+    if (category) {
+      if (!dynamicCategoryColors[category]) {
+        const usedColors = Object.values(dynamicCategoryColors);
+        let nextColor = colorsToUse.find(c => !usedColors.includes(c));
+        if (!nextColor) nextColor = "#e0e0e0";
+        dynamicCategoryColors[category] = nextColor;
+        colorSheet.appendRow([category, nextColor]);
+      }
+      rowBaseColor = dynamicCategoryColors[category];
+    }
+    
+    let finalRowColor = (status === 'DONE') ? "#f3f3f3" : rowBaseColor;
+
+    let rowBg = new Array(8).fill(finalRowColor);
+    let rowFc = new Array(8).fill("black");
+
+    // צבעי סטטוס
+    switch (status) {
+      case 'OPEN':
+        rowBg[3] = "#cfe2f3"; // כחול בהיר
+        rowFc[3] = "black";
+        break;
+      case 'IN PROGRESS':
+        rowBg[3] = "#1155cc"; // כחול כהה
+        rowFc[3] = "white";   // לבן
+        break;
+      case 'DEPENDENT':
+        rowBg[3] = "#595959"; // אפור כהה
+        rowFc[3] = "white";   // לבן
+        break;
+      case 'DONE':
+        rowBg[3] = "#d9ead3"; // ירוק בהיר
+        rowFc[3] = "black";
+        break;
+    }
+
+    backgrounds.push(rowBg);
+    fontColors.push(rowFc);
+  });
+
+  range.setBackgrounds(backgrounds);
+  range.setFontColors(fontColors);
+}
