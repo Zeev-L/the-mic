@@ -54,7 +54,7 @@
     .field{ display:flex; flex-direction:column; gap:3px; } .field>label{ font-size:10.5px; color:var(--muted); font-weight:700; padding-inline-start:2px; }
     input,select,textarea{ font-family:inherit; font-size:14px; color:var(--text); background:var(--surface); border:1px solid var(--border); border-radius:9px; padding:8px 10px; outline:none; transition:border-color .15s,box-shadow .15s; }
     input:focus,select:focus,textarea:focus{ border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
-    .search{ flex:1; min-width:200px; } .search input{ width:100%; }
+    .search{ flex:1; min-width:180px; } .search input{ width:100%; }
     .toolbar .spacer{ flex:1; }
     .toggle-views{ display:inline-flex; border:1px solid var(--border); border-radius:10px; overflow:hidden; }
     .toggle-views button{ border:none; background:var(--surface); padding:9px 13px; cursor:pointer; font-family:inherit; font-size:13px; font-weight:700; color:var(--muted); }
@@ -62,7 +62,7 @@
     .check{ display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:600; cursor:pointer; user-select:none; padding-bottom:8px; } .check input{ width:16px; height:16px; accent-color:var(--accent); }
 
     .ms{ position:relative; }
-    .ms-btn{ display:flex; align-items:center; gap:7px; min-width:130px; background:var(--surface); border:1px solid var(--border); border-radius:9px; padding:8px 10px; cursor:pointer; font-size:14px; font-weight:600; }
+    .ms-btn{ display:flex; align-items:center; gap:7px; min-width:120px; background:var(--surface); border:1px solid var(--border); border-radius:9px; padding:8px 10px; cursor:pointer; font-size:14px; font-weight:600; }
     .ms-btn .cnt{ background:var(--accent); color:#fff; border-radius:20px; font-size:11px; padding:0 7px; font-weight:700; }
     .ms-pop{ position:absolute; z-index:40; top:calc(100% + 6px); inset-inline-start:0; width:240px; max-height:320px; overflow:auto; background:var(--surface); border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow-hover); padding:8px; display:none; }
     .ms-pop.open{ display:block; } .ms-pop input.search{ width:100%; margin-bottom:6px; }
@@ -93,9 +93,11 @@
     textarea.note-edit{ width:100%; font-size:12px; font-style:italic; min-height:54px; margin-bottom:8px; resize:vertical; }
     .crow{ display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-top:4px; }
     select.pri-sel{ font-size:11.5px; font-weight:800; padding:4px 6px; border-radius:7px; cursor:pointer; }
-    select.status{ font-size:12.5px; font-weight:700; padding:6px 8px; border:none; border-radius:8px; cursor:pointer; flex:1; min-width:96px; }
-    .due-in{ font-size:12px; padding:5px 7px; border-radius:8px; color:var(--text); width:140px; }
+    select.status{ font-size:12.5px; font-weight:700; padding:6px 8px; border:none; border-radius:8px; cursor:pointer; flex:1; min-width:90px; }
+    select.ms-sel{ font-size:11.5px; padding:5px 7px; border-radius:8px; cursor:pointer; max-width:130px; color:var(--muted); }
+    .due-in,.start-in{ font-size:12px; padding:5px 7px; border-radius:8px; color:var(--text); width:135px; }
     .due-in.overdue{ border-color:var(--danger); color:var(--danger); background:var(--danger-bg); }
+    .fl{ display:inline-flex; align-items:center; gap:3px; font-size:10px; color:var(--muted); font-weight:700; }
     .mini{ border:1px solid var(--border); background:var(--surface); border-radius:8px; width:32px; height:32px; cursor:pointer; font-size:14px; display:inline-flex; align-items:center; justify-content:center; flex:none; text-decoration:none; color:var(--text); }
     .mini:hover{ background:var(--surface-2); }
     .selbox{ position:absolute; top:11px; inset-inline-start:10px; width:17px; height:17px; accent-color:var(--accent); cursor:pointer; }
@@ -103,12 +105,34 @@
     .list-sec{ margin-bottom:18px; } .list-sec .sec-head{ display:flex; align-items:center; gap:8px; margin:0 2px 8px; font-weight:800; font-size:14px; }
     .list-sec .sec-head .stripe{ width:10px; height:10px; border-radius:50%; } .list-sec .sec-head .count{ font-size:11.5px; color:var(--muted); font-weight:700; }
     .list{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; }
-    .lrow{ display:grid; grid-template-columns:18px 6px 1fr 90px 150px 160px 36px; gap:10px; align-items:center; padding:10px 14px; border-bottom:1px solid var(--border); }
+    .lrow{ display:grid; grid-template-columns:18px 6px 1fr 90px 150px 150px 150px 36px; gap:10px; align-items:center; padding:10px 14px; border-bottom:1px solid var(--border); }
     .lrow:last-child{ border-bottom:none; } .lrow:hover{ background:var(--surface-2); } .lrow .sw{ width:6px; height:34px; border-radius:4px; background:var(--cat,#cbd0db); }
-    .lrow .selbox{ position:static; top:auto; inset-inline-start:auto; align-self:center; } .lrow>div{ min-width:0; } .lrow .lname{ word-break:break-word; }
-    .lrow .lname{ font-weight:700; outline:none; border-radius:6px; padding:2px 4px; } .lrow .lname:focus{ background:var(--accent-soft); }
+    .lrow .selbox{ position:static; top:auto; inset-inline-start:auto; align-self:center; } .lrow>div{ min-width:0; }
+    .lrow .lname{ font-weight:700; outline:none; border-radius:6px; padding:2px 4px; word-break:break-word; } .lrow .lname:focus{ background:var(--accent-soft); }
     .lrow .lnote{ font-size:11.5px; font-style:italic; color:var(--muted); }
     .lrow.done .lname{ text-decoration:line-through; color:var(--muted); }
+
+    /* Roadmap (HTML gantt) */
+    .rm{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; }
+    .rm-axis{ display:flex; border-bottom:1px solid var(--border); background:var(--surface-2); font-size:11px; color:var(--muted); font-weight:700; }
+    .rm-axis .lane-head-sp{ width:210px; flex:none; border-inline-start:1px solid var(--border); }
+    .rm-axis .ticks{ position:relative; flex:1; height:26px; }
+    .rm-axis .tick{ position:absolute; top:0; height:100%; border-inline-start:1px solid var(--border); padding-inline-start:5px; line-height:26px; white-space:nowrap; }
+    .rm-lane{ display:flex; border-bottom:1px solid var(--border); }
+    .rm-lane:last-child{ border-bottom:none; }
+    .rm-lane.drop .track{ background:var(--accent-soft); }
+    .lane-head{ width:210px; flex:none; padding:10px 12px; border-inline-start:1px solid var(--border); }
+    .lane-head .nm{ display:flex; align-items:center; gap:7px; font-weight:800; font-size:13px; }
+    .lane-head .nm .stripe{ width:9px; height:9px; border-radius:50%; flex:none; }
+    .lane-head .pr{ margin-top:6px; height:6px; background:var(--surface-2); border-radius:6px; overflow:hidden; }
+    .lane-head .pr>i{ display:block; height:100%; background:var(--done); border-radius:6px; }
+    .lane-head .pct{ font-size:11px; color:var(--muted); margin-top:3px; font-weight:600; }
+    .track{ position:relative; flex:1; min-height:54px; padding:8px 0; }
+    .track .grid{ position:absolute; inset:0; } .track .grid i{ position:absolute; top:0; height:100%; border-inline-start:1px solid var(--border); opacity:.5; }
+    .bar{ position:absolute; height:24px; border-radius:7px; background:var(--cat,#9aa3b2); color:#10202a; font-size:11px; font-weight:700; line-height:24px; padding:0 8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; box-shadow:var(--shadow); cursor:grab; border:1px solid rgba(0,0,0,.06); }
+    .bar.done{ opacity:.5; }
+    .bar.today-line{} .track .today{ position:absolute; top:0; height:100%; width:2px; background:var(--danger); opacity:.6; }
+    .rm-empty{ padding:40px; text-align:center; color:var(--muted); }
 
     .scrim{ position:fixed; inset:0; background:rgba(16,24,40,.45); opacity:0; pointer-events:none; transition:opacity .2s; z-index:55; } .scrim.show{ opacity:1; pointer-events:auto; }
     .panel{ position:fixed; top:0; inset-inline-start:0; height:100%; width:430px; max-width:92vw; background:var(--surface); box-shadow:var(--shadow-panel); transform:translateX(105%); transition:transform .25s cubic-bezier(.4,0,.2,1); z-index:60; display:flex; flex-direction:column; }
@@ -119,17 +143,27 @@
     .panel .foot{ padding:14px 20px; border-top:1px solid var(--border); display:flex; gap:8px; }
     .date-chips{ display:flex; gap:6px; flex-wrap:wrap; margin-top:7px; } .date-chips button{ border:1px solid var(--border); background:var(--surface); border-radius:20px; padding:5px 11px; font-size:12.5px; font-weight:600; cursor:pointer; color:var(--text); } .date-chips button:hover{ border-color:var(--accent); color:var(--accent); }
     .pri-pick{ display:flex; gap:6px; } .pri-pick button{ flex:1; border:1px solid var(--border); background:var(--surface); border-radius:9px; padding:8px 0; font-weight:800; font-size:13px; cursor:pointer; color:var(--text); } .pri-pick button.on{ color:#fff; border-color:transparent; }
+    /* milestones modal */
+    .modal-bg{ position:fixed; inset:0; background:rgba(16,24,40,.45); display:none; align-items:center; justify-content:center; z-index:62; padding:16px; } .modal-bg.show{ display:flex; }
+    .modal{ background:var(--surface); border-radius:16px; width:560px; max-width:100%; max-height:88vh; overflow:auto; box-shadow:var(--shadow-hover); }
+    .modal h3{ margin:0; padding:16px 20px; border-bottom:1px solid var(--border); font-size:17px; display:flex; justify-content:space-between; }
+    .modal .body{ padding:16px 20px; }
+    .m-item{ display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid var(--border); }
+    .m-item .dot{ width:12px; height:12px; border-radius:50%; flex:none; }
+    .m-item .mn{ font-weight:700; flex:1; } .m-item .md{ font-size:12px; color:var(--muted); }
+    .m-new{ display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-top:14px; padding-top:12px; border-top:2px solid var(--border); }
+    .m-new input{ font-size:13px; }
 
     .bulk{ position:fixed; bottom:18px; left:50%; transform:translateX(-50%) translateY(120%); transition:transform .25s; background:var(--text); color:var(--bg); border-radius:14px; padding:10px 14px; display:flex; align-items:center; gap:10px; box-shadow:var(--shadow-hover); z-index:50; flex-wrap:wrap; max-width:94vw; } .bulk.show{ transform:translateX(-50%) translateY(0); }
     .bulk b{ font-size:14px; } .bulk select{ background:var(--surface); color:var(--text); } .bulk .bbtn{ background:transparent; border:1px solid rgba(255,255,255,.3); color:var(--bg); border-radius:9px; padding:7px 11px; cursor:pointer; font-weight:700; font-size:13px; }
 
     .toast{ position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--text); color:var(--bg); padding:11px 16px; border-radius:11px; font-size:14px; font-weight:600; opacity:0; transition:all .25s; z-index:80; box-shadow:var(--shadow-hover); display:flex; align-items:center; gap:12px; } .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); } .toast.err{ background:var(--danger); color:#fff; } .toast button{ background:transparent; border:none; color:#8ab4ff; font-weight:800; cursor:pointer; font-size:14px; font-family:inherit; }
 
-    .overlay{ position:fixed; inset:0; background:rgba(0,0,0,.04); display:none; align-items:center; justify-content:center; z-index:45; } .overlay.show{ display:flex; } .spinner{ width:36px; height:36px; border:4px solid var(--border-2); border-top-color:var(--accent); border-radius:50%; animation:spin .8s linear infinite; } @keyframes spin{ to{ transform:rotate(360deg);} }
+    .overlay{ position:fixed; inset:0; background:rgba(0,0,0,.04); display:none; align-items:center; justify-content:center; z-index:45; } .overlay.show{ display:flex; } .spinner{ width:36px; height:36px; border:4px solid var(--border-2); border-top-color:var(--accent); border-radius:50%; animation:spin .8s linear infinite; } @keyframes spin{ to{ transform:rotate(360deg); } }
     .skel{ display:grid; grid-auto-flow:column; grid-auto-columns:minmax(280px,1fr); gap:13px; } .skel .scol{ background:var(--surface-2); border-radius:var(--radius); padding:12px; height:300px; } .skel .sc{ background:var(--surface); border-radius:10px; height:80px; margin-bottom:10px; opacity:.6; animation:pulse 1.2s infinite; } @keyframes pulse{ 50%{ opacity:.3; } }
     .empty{ text-align:center; padding:60px 20px; color:var(--muted); } .empty .big{ font-size:42px; margin-bottom:8px; } .col-empty{ text-align:center; color:var(--muted); font-size:12.5px; padding:14px 6px; border:1px dashed var(--border-2); border-radius:10px; }
 
-    @media (max-width:760px){ .panel{ width:100%; max-width:100%; } .lrow{ grid-template-columns:18px 6px 1fr 150px 36px; } .lrow .lpri,.lrow .lstatus2{ display:none; } .title h1{ font-size:19px; } }
+    @media (max-width:760px){ .panel{ width:100%; max-width:100%; } .lrow{ grid-template-columns:18px 6px 1fr 150px 36px; } .lrow .lpri,.lrow .lstatus2,.lrow .lms{ display:none; } .title h1{ font-size:19px; } .lane-head,.rm-axis .lane-head-sp{ width:120px; } }
   </style>
 </head>
 <body>
@@ -147,6 +181,7 @@
       </div>
       <div class="actions">
         <button class="btn primary" id="btnAdd">＋ משימה</button>
+        <button class="btn" id="btnMs">◇ מיילסטונז</button>
         <button class="btn" id="btnSync">🔄 סנכרן</button>
         <button class="btn" id="btnSummary">📧 סיכום</button>
         <button class="btn icon-only" id="btnTheme" title="מצב כהה/בהיר">🌙</button>
@@ -162,12 +197,12 @@
       <div class="field"><label>קטגוריות</label><div class="ms" id="msCat"></div></div>
       <div class="field"><label>סטטוסים</label><div class="ms" id="msStatus"></div></div>
       <div class="field"><label>קבץ לפי</label>
-        <select id="groupBy"><option value="status">סטטוס</option><option value="category">קטגוריה</option><option value="date">תאריך</option><option value="priority">עדיפות</option></select></div>
+        <select id="groupBy"><option value="status">סטטוס</option><option value="category">קטגוריה</option><option value="milestone">מיילסטון</option><option value="date">תאריך</option><option value="priority">עדיפות</option></select></div>
       <div class="field"><label>מיין</label>
         <select id="sort"><option value="due">תאריך יעד</option><option value="priority">עדיפות</option><option value="name">שם</option></select></div>
       <label class="check"><input type="checkbox" id="hideDone" checked> הסתר שהושלמו</label>
       <div class="spacer"></div>
-      <div class="toggle-views"><button id="vBoard" class="active">לוח</button><button id="vList">רשימה</button></div>
+      <div class="toggle-views"><button id="vBoard" class="active">לוח</button><button id="vList">רשימה</button><button id="vRoad">Roadmap</button></div>
     </div>
 
     <div id="content"></div>
@@ -184,15 +219,28 @@
       <div><label>משימה</label><input type="text" id="pTask" placeholder="מה צריך לעשות?"></div>
       <div><label>קטגוריה</label><input type="text" id="pCat" list="catList" placeholder="למשל: לקוחות"><datalist id="catList"></datalist></div>
       <div><label>עדיפות</label><div class="pri-pick" id="pPri"></div></div>
-      <div><label>תאריך יעד</label><input type="date" id="pDue">
-        <div class="date-chips"><button data-d="0">היום</button><button data-d="1">מחר</button><button data-d="7">שבוע הבא</button><button data-d="-1">נקה</button></div></div>
+      <div><label>מיילסטון</label><select id="pMsSel"></select></div>
+      <div style="display:flex; gap:10px;">
+        <div style="flex:1"><label>תאריך התחלה</label><input type="date" id="pStart"></div>
+        <div style="flex:1"><label>תאריך יעד</label><input type="date" id="pDue"></div>
+      </div>
+      <div class="date-chips" id="pDueChips"><span style="font-size:11px;color:var(--muted);align-self:center">יעד:</span><button data-d="0">היום</button><button data-d="1">מחר</button><button data-d="7">שבוע הבא</button><button data-d="-1">נקה</button></div>
       <div><label>הערות</label><textarea id="pNotes" placeholder="הערות חופשיות…"></textarea></div>
     </div>
     <div class="foot"><button class="btn primary" id="pSave">💾 הוסף</button><button class="btn" id="pCancel">ביטול</button></div>
   </div>
 
+  <!-- Milestones modal -->
+  <div class="modal-bg" id="msModalBg">
+    <div class="modal">
+      <h3><span>מיילסטונז</span><span class="mini" id="msModalClose" style="cursor:pointer">✕</span></h3>
+      <div class="body" id="msModalBody"></div>
+    </div>
+  </div>
+
 <script>
-  var S = { tasks:[], colors:{}, view:'board', groupBy:'status', sort:'due',
+  var S = { tasks:[], colors:{}, milestones:[], doneCount:0, doneLoaded:false,
+    view:'board', groupBy:'status', sort:'due',
     filters:{ cats:new Set(), statuses:new Set(), q:'', overdue:false, hideDone:true },
     sel:new Set(), theme:'light', density:'comfortable' };
   var STATUSES=[{key:'OPEN',label:'פתוח',color:'var(--open)',bg:'var(--open-bg)',fg:'var(--open-fg)'},
@@ -201,41 +249,55 @@
     {key:'DONE',label:'הושלם',color:'var(--done)',bg:'var(--done-bg)',fg:'var(--done-fg)'}];
   var PRIORITIES=[{key:'P0',color:'var(--p0)'},{key:'P1',color:'var(--p1)'},{key:'P2',color:'var(--p2)'},{key:'P3',color:'var(--p3)'}];
   var DATE_BUCKETS=[{key:'overdue',label:'באיחור',color:'var(--danger)'},{key:'today',label:'היום',color:'var(--open)'},{key:'tomorrow',label:'מחר',color:'var(--progress)'},{key:'week',label:'השבוע',color:'var(--p2)'},{key:'later',label:'מאוחר יותר',color:'var(--muted)'},{key:'none',label:'ללא תאריך',color:'var(--dependent)'}];
+  var MS_COLORS=['#4f46e5','#0891b2','#16a34a','#ca8a04','#dc2626','#9333ea','#db2777','#0d9488'];
 
   function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   function $(id){ return document.getElementById(id); }
   function showOverlay(b){ $('overlay').classList.toggle('show',b); }
   function st(k){ return STATUSES.find(x=>x.key===k)||{label:k,bg:'var(--surface-2)',fg:'var(--text)',color:'var(--muted)'}; }
   function catColor(c){ return S.colors[c]||'#cbd0db'; }
+  function ms(id){ return S.milestones.find(m=>m.id===id); }
   function srun(m,a,ok,err){ var r=google.script.run.withSuccessHandler(ok||function(){}).withFailureHandler(err||function(e){ showOverlay(false); toast('שגיאה: '+(e&&e.message||e),true); }); r[m].apply(r,a||[]); }
 
   function isISO(s){ return /^\d{4}-\d{2}-\d{2}$/.test(s); }
   function todayISO(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
   function addDaysISO(iso,n){ var d=new Date(iso+'T00:00:00'); d.setDate(d.getDate()+n); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
   function dayDiff(iso){ return Math.round((new Date(iso+'T00:00:00')-new Date(todayISO()+'T00:00:00'))/86400000); }
+  function daysBetween(a,b){ return Math.round((new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))/86400000); }
   function dueBucket(t){ if(!isISO(t.due)) return 'none'; var d=dayDiff(t.due); if(d<0)return 'overdue'; if(d===0)return 'today'; if(d===1)return 'tomorrow'; if(d<=7)return 'week'; return 'later'; }
   function isOverdue(t){ return isISO(t.due) && dayDiff(t.due)<0 && t.status!=='DONE'; }
   function normPri(t){ var m=/(p[0-3])/i.exec(t.urgency||''); return m?m[1].toUpperCase():''; }
   function priColor(p){ var x=PRIORITIES.find(o=>o.key===p); return x?x.color:'var(--muted)'; }
   function priRank(p){ var i=PRIORITIES.findIndex(o=>o.key===p); return i<0?9:i; }
+  function relDate(due){ if(!isISO(due)) return due; var d=dayDiff(due); if(d===0)return 'היום'; if(d===1)return 'מחר'; if(d===-1)return 'אתמול'; if(d>1&&d<=7)return 'בעוד '+d+' ימים'; if(d<-1)return 'לפני '+(-d)+' ימים'; var p=due.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
 
   function savePrefs(){ try{ localStorage.setItem('tm_prefs',JSON.stringify({theme:S.theme,density:S.density,view:S.view,groupBy:S.groupBy,sort:S.sort,hideDone:S.filters.hideDone})); }catch(e){} }
   function loadPrefs(){ try{ var p=JSON.parse(localStorage.getItem('tm_prefs')||'{}'); if(p.theme)S.theme=p.theme; if(p.density)S.density=p.density; if(p.view)S.view=p.view; if(p.groupBy)S.groupBy=p.groupBy; if(p.sort)S.sort=p.sort; if(typeof p.hideDone==='boolean')S.filters.hideDone=p.hideDone; }catch(e){} }
-  function applyPrefs(){ document.documentElement.setAttribute('data-theme',S.theme); document.documentElement.setAttribute('data-density',S.density); $('btnTheme').textContent=S.theme==='dark'?'☀️':'🌙'; $('groupBy').value=S.groupBy; $('sort').value=S.sort; $('hideDone').checked=S.filters.hideDone; $('vBoard').classList.toggle('active',S.view==='board'); $('vList').classList.toggle('active',S.view==='list'); }
+  function applyPrefs(){ document.documentElement.setAttribute('data-theme',S.theme); document.documentElement.setAttribute('data-density',S.density); $('btnTheme').textContent=S.theme==='dark'?'☀️':'🌙'; $('groupBy').value=S.groupBy; $('sort').value=S.sort; $('hideDone').checked=S.filters.hideDone;
+    $('vBoard').classList.toggle('active',S.view==='board'); $('vList').classList.toggle('active',S.view==='list'); $('vRoad').classList.toggle('active',S.view==='roadmap'); }
 
-  function load(initial){ if(initial) renderSkeleton(); else showOverlay(true); srun('getTasksForWeb',[],function(res){ S.tasks=res.tasks||[]; S.colors=res.colors||{}; buildFilters(); render(); showOverlay(false); }); }
+  /* ---- data load ---- */
+  function load(initial){ if(initial) renderSkeleton(); else showOverlay(true);
+    srun('getMilestonesForWeb',[],function(mres){ S.milestones=mres||[]; });
+    srun('getTasksForWeb',[],function(res){ S.tasks=res.tasks||[]; S.colors=res.colors||{}; S.doneCount=res.doneCount||0; S.doneLoaded=false; S.sel.clear(); buildFilters(); afterLoad(); render(); showOverlay(false); }); }
+  function afterLoad(){ /* hook */ }
   function find(id){ for(var i=0;i<S.tasks.length;i++) if(S.tasks[i].id===id) return S.tasks[i]; return null; }
+  // טעינת DONE על דרישה
+  function ensureDone(cb){ if(S.doneLoaded){ cb&&cb(); return; } showOverlay(true);
+    srun('getDoneTasks',[],function(done){ (done||[]).forEach(d=>{ if(!find(d.id)) S.tasks.push(d); }); S.doneLoaded=true; showOverlay(false); cb&&cb(); }); }
+  function doneTotal(){ var inActive=S.tasks.filter(t=>t.status==='DONE').length; return S.doneLoaded?inActive:(S.doneCount+inActive); }
 
+  /* ---- multi-select ---- */
   function buildMS(container,getOpts,selSet,searchable){
     container.innerHTML=''; var btn=document.createElement('button'); btn.className='ms-btn';
     var lbl=document.createElement('span'); var cnt=document.createElement('span'); cnt.className='cnt'; btn.appendChild(lbl); btn.appendChild(cnt);
     var pop=document.createElement('div'); pop.className='ms-pop'; container.appendChild(btn); container.appendChild(pop);
     function refreshLabel(){ lbl.textContent=selSet.size?selSet.size+' נבחרו':'הכל'; cnt.style.display=selSet.size?'inline':'none'; cnt.textContent=selSet.size; }
     function build(){ pop.innerHTML=''; var opts=getOpts(); var q=''; var holder;
-      if(searchable){ var si=document.createElement('input'); si.className='search'; si.placeholder='חפש…'; si.addEventListener('input',function(){ q=si.value.toLowerCase(); rows(); }); si.addEventListener('click',function(e){e.stopPropagation();}); pop.appendChild(si); }
+      if(searchable){ var si=document.createElement('input'); si.className='search'; si.placeholder='חפש…'; si.addEventListener('input',function(){ q=si.value.toLowerCase(); rows(); }); si.addEventListener('click',function(e){ e.stopPropagation(); }); pop.appendChild(si); }
       holder=document.createElement('div'); pop.appendChild(holder);
       function rows(){ holder.innerHTML=''; opts.filter(o=>!q||o.label.toLowerCase().indexOf(q)>=0).forEach(function(o){
-        var row=document.createElement('label'); row.className='ms-opt'; row.addEventListener('click',function(e){e.stopPropagation();});
+        var row=document.createElement('label'); row.className='ms-opt'; row.addEventListener('click',function(e){ e.stopPropagation(); });
         var c=document.createElement('input'); c.type='checkbox'; c.checked=selSet.has(o.key);
         c.addEventListener('change',function(){ c.checked?selSet.add(o.key):selSet.delete(o.key); refreshLabel(); render(); }); row.appendChild(c);
         if(o.color){ var sw=document.createElement('span'); sw.className='sw'; sw.style.background=o.color; row.appendChild(sw); }
@@ -254,6 +316,7 @@
     var dl=$('catList'); var set={}; S.tasks.forEach(t=>{ if(t.category)set[t.category]=1; }); dl.innerHTML=Object.keys(set).sort().map(c=>'<option value="'+esc(c)+'">').join('');
   }
 
+  /* ---- filter / group ---- */
   function visible(){ var f=S.filters,q=f.q.toLowerCase(); return S.tasks.filter(function(t){
     if(f.hideDone && t.status==='DONE') return false;
     if(f.statuses.size && !f.statuses.has(t.status)) return false;
@@ -269,40 +332,44 @@
     if(S.groupBy==='status') return STATUSES.filter(s=>!(S.filters.hideDone&&s.key==='DONE')).map(s=>({key:s.key,label:s.label,color:s.color}));
     if(S.groupBy==='priority') return PRIORITIES.map(p=>({key:p.key,label:p.key,color:p.color})).concat([{key:'',label:'ללא עדיפות',color:'var(--muted)'}]);
     if(S.groupBy==='date') return DATE_BUCKETS.slice();
+    if(S.groupBy==='milestone') return S.milestones.map(m=>({key:m.id,label:m.name,color:m.color||'var(--accent)'})).concat([{key:'',label:'לא משויך',color:'var(--muted)'}]);
     var set={}; S.tasks.forEach(t=>{ set[t.category||'(ללא קטגוריה)']=1; }); return Object.keys(set).sort().map(c=>({key:c,label:c,color:catColor(c)})); }
-  function groupKeyOf(t){ if(S.groupBy==='status')return t.status; if(S.groupBy==='priority')return normPri(t); if(S.groupBy==='date')return dueBucket(t); return t.category||'(ללא קטגוריה)'; }
+  function groupKeyOf(t){ if(S.groupBy==='status')return t.status; if(S.groupBy==='priority')return normPri(t); if(S.groupBy==='date')return dueBucket(t); if(S.groupBy==='milestone')return t.milestoneId||''; return t.category||'(ללא קטגוריה)'; }
 
+  /* ---- stats ---- */
   function renderStats(){
-    var c={'OPEN':0,'IN PROGRESS':0,'DEPENDENT':0,'DONE':0,overdue:0};
-    S.tasks.forEach(t=>{ c[t.status]=(c[t.status]||0)+1; if(isOverdue(t))c.overdue++; });
+    var c={'OPEN':0,'IN PROGRESS':0,'DEPENDENT':0,overdue:0};
+    S.tasks.forEach(t=>{ if(c[t.status]!==undefined)c[t.status]++; if(isOverdue(t))c.overdue++; });
     function chip(key,num,lbl,color,kind){ var active=kind==='overdue'?S.filters.overdue:S.filters.statuses.has(key);
       return '<div class="chip'+(active?' active':'')+'" data-kind="'+kind+'" data-key="'+esc(key||'')+'"><span class="bar" style="background:'+color+'"></span><div><div class="num">'+num+'</div><div class="lbl">'+lbl+'</div></div></div>'; }
-    $('stats').innerHTML=chip('OPEN',c['OPEN'],'פתוחות','var(--open)','status')+chip('IN PROGRESS',c['IN PROGRESS'],'בתהליך','var(--progress)','status')+chip('DEPENDENT',c['DEPENDENT'],'תלויות','var(--dependent)','status')+chip('',c.overdue,'באיחור','var(--danger)','overdue')+chip('DONE',c['DONE'],'הושלמו','var(--done)','status');
+    $('stats').innerHTML=chip('OPEN',c['OPEN'],'פתוחות','var(--open)','status')+chip('IN PROGRESS',c['IN PROGRESS'],'בתהליך','var(--progress)','status')+chip('DEPENDENT',c['DEPENDENT'],'תלויות','var(--dependent)','status')+chip('',c.overdue,'באיחור','var(--danger)','overdue')+chip('DONE',doneTotal(),'הושלמו','var(--done)','status');
     $('stats').querySelectorAll('.chip').forEach(function(el){ el.addEventListener('click',function(){ var kind=el.getAttribute('data-kind'),key=el.getAttribute('data-key');
-      if(kind==='overdue') S.filters.overdue=!S.filters.overdue; else { S.filters.statuses.has(key)?S.filters.statuses.delete(key):S.filters.statuses.add(key); if(msStatusApi)msStatusApi.refresh(); } render(); }); });
+      if(kind==='overdue') S.filters.overdue=!S.filters.overdue;
+      else if(key==='DONE'){ if(!S.filters.statuses.has('DONE')){ S.filters.hideDone=false; $('hideDone').checked=false; S.filters.statuses.add('DONE'); ensureDone(render); return; } else { S.filters.statuses.delete('DONE'); } }
+      else { S.filters.statuses.has(key)?S.filters.statuses.delete(key):S.filters.statuses.add(key); if(msStatusApi)msStatusApi.refresh(); }
+      render(); }); });
   }
 
-  /* ---- inline control builders (shared by board + list) ---- */
-  function ctlStatus(t){ var s=st(t.status);
-    return '<select class="status" data-id="'+esc(t.id)+'" onchange="onStatus(this)" style="background:'+s.bg+';color:'+s.fg+'">'+STATUSES.map(x=>'<option value="'+x.key+'"'+(t.status===x.key?' selected':'')+'>'+x.label+'</option>').join('')+'</select>'; }
-  function ctlPri(t){ var p=normPri(t); var style=p?('background:'+priColor(p)+';color:#fff;border-color:transparent'):'';
-    return '<select class="pri-sel" title="עדיפות" data-id="'+esc(t.id)+'" onchange="onPri(this)" style="'+style+'"><option value="">⚐</option>'+PRIORITIES.map(o=>'<option value="'+o.key+'"'+(p===o.key?' selected':'')+'>'+o.key+'</option>').join('')+'</select>'; }
-  function ctlDue(t){ var od=isOverdue(t); return '<input type="date" class="due-in'+(od?' overdue':'')+'" title="תאריך יעד" data-id="'+esc(t.id)+'" value="'+(isISO(t.due)?t.due:'')+'" onchange="onDue(this)">'; }
+  /* ---- inline control builders ---- */
+  function ctlStatus(t){ var s=st(t.status); return '<select class="status" data-id="'+esc(t.id)+'" onchange="onStatus(this)" style="background:'+s.bg+';color:'+s.fg+'">'+STATUSES.map(x=>'<option value="'+x.key+'"'+(t.status===x.key?' selected':'')+'>'+x.label+'</option>').join('')+'</select>'; }
+  function ctlPri(t){ var p=normPri(t); var style=p?('background:'+priColor(p)+';color:#fff;border-color:transparent'):''; return '<select class="pri-sel" title="עדיפות" data-id="'+esc(t.id)+'" onchange="onPri(this)" style="'+style+'"><option value="">⚐</option>'+PRIORITIES.map(o=>'<option value="'+o.key+'"'+(p===o.key?' selected':'')+'>'+o.key+'</option>').join('')+'</select>'; }
+  function ctlDue(t){ var od=isOverdue(t); return '<span class="fl">📅<input type="date" class="due-in'+(od?' overdue':'')+'" title="תאריך יעד" data-id="'+esc(t.id)+'" value="'+(isISO(t.due)?t.due:'')+'" onchange="onDue(this)"></span>'; }
+  function ctlStart(t){ return '<span class="fl">▶<input type="date" class="start-in" title="תאריך התחלה" data-id="'+esc(t.id)+'" value="'+(isISO(t.start)?t.start:'')+'" onchange="onStart(this)"></span>'; }
+  function ctlMs(t){ return '<select class="ms-sel" title="מיילסטון" data-id="'+esc(t.id)+'" onchange="onMs(this)"><option value="">◇ ללא מיילסטון</option>'+S.milestones.map(m=>'<option value="'+esc(m.id)+'"'+(t.milestoneId===m.id?' selected':'')+'>'+esc(m.name)+'</option>').join('')+'</select>'; }
   function elName(t){ return '<div class="name" contenteditable="true" spellcheck="false" data-id="'+esc(t.id)+'" data-orig="'+esc(t.task)+'" onkeydown="onNameKey(event,this)" onblur="onNameBlur(this)">'+esc(t.task)+'</div>'; }
   function elCat(t){ return '<span class="cat-edit" contenteditable="true" spellcheck="false" data-id="'+esc(t.id)+'" data-orig="'+esc(t.category||'')+'" onkeydown="onCatKey(event,this)" onblur="onCatBlur(this)">'+esc(t.category||'')+'</span>'; }
-  function elNote(t){ var enc=encodeURIComponent(t.id);
-    if(t.notes) return '<div class="note clamp" onclick="editNote(this,\''+enc+'\')">'+esc(t.notes)+'</div>';
-    return '<div class="note add" onclick="editNote(this,\''+enc+'\')">＋ הערה</div>'; }
+  function elNote(t){ var enc=encodeURIComponent(t.id); if(t.notes) return '<div class="note clamp" onclick="editNote(this,\''+enc+'\')">'+esc(t.notes)+'</div>'; return '<div class="note add" onclick="editNote(this,\''+enc+'\')">＋ הערה</div>'; }
   function mailBtn(t){ return t.threadId?'<a class="mini" title="פתח מייל" target="_blank" href="https://mail.google.com/mail/u/0/#all/'+encodeURIComponent(t.threadId)+'">📩</a>':''; }
   function selBox(t){ return '<input type="checkbox" class="selbox" title="בחר" '+(S.sel.has(t.id)?'checked':'')+' onclick="onSel(event,\''+encodeURIComponent(t.id)+'\')">'; }
 
-  function render(){ renderStats(); if(!S.tasks.length){ $('content').innerHTML='<div class="empty"><div class="big">📭</div><b>אין משימות עדיין</b><p>לחץ "＋ משימה" או "סנכרן".</p></div>'; renderBulk(); return; } S.view==='board'?renderBoard():renderList(); renderBulk(); }
+  function render(){ renderStats(); if(!S.tasks.length && !S.doneCount){ $('content').innerHTML='<div class="empty"><div class="big">📭</div><b>אין משימות עדיין</b><p>לחץ "＋ משימה" או "סנכרן".</p></div>'; renderBulk(); return; }
+    if(S.view==='board')renderBoard(); else if(S.view==='list')renderList(); else renderRoadmap(); renderBulk(); }
 
   function cardHtml(t){ return '<div class="card'+(t.status==='DONE'?' done':'')+(S.sel.has(t.id)?' sel':'')+'" draggable="true" data-id="'+esc(t.id)+'" style="--cat:'+catColor(t.category)+'">'+
-      selBox(t)+
-      '<div class="ctop">'+ctlPri(t)+elCat(t)+'</div>'+
-      elName(t)+ elNote(t)+
-      '<div class="crow">'+ctlStatus(t)+ctlDue(t)+mailBtn(t)+'</div>'+
+      selBox(t)+'<div class="ctop">'+ctlPri(t)+elCat(t)+'</div>'+elName(t)+elNote(t)+
+      '<div class="crow">'+ctlStatus(t)+mailBtn(t)+'</div>'+
+      '<div class="crow">'+ctlDue(t)+ctlStart(t)+'</div>'+
+      '<div class="crow">'+ctlMs(t)+'</div>'+
     '</div>'; }
 
   function renderBoard(){ var list=visible(),gs=groups(); var by={}; gs.forEach(g=>by[g.key]=[]); list.forEach(t=>{ var k=groupKeyOf(t); (by[k]||(by[k]=[])).push(t); });
@@ -319,36 +386,83 @@
         '<div><div class="lname" contenteditable="true" spellcheck="false" data-id="'+esc(t.id)+'" data-orig="'+esc(t.task)+'" onkeydown="onNameKey(event,this)" onblur="onNameBlur(this)">'+esc(t.task)+'</div><div class="lcat" style="font-size:11.5px;color:var(--muted)">'+elCat(t)+'</div>'+(t.notes?'<div class="lnote">'+esc(t.notes)+'</div>':'')+'</div>'+
         '<div class="lpri">'+ctlPri(t)+'</div>'+
         '<div class="lstatus2">'+ctlStatus(t)+'</div>'+
+        '<div class="lms">'+ctlMs(t)+'</div>'+
         '<div>'+ctlDue(t)+'</div>'+
         '<div>'+mailBtn(t)+'</div>'+
       '</div>'; });
       html+='</div></div>'; });
     $('content').innerHTML=html||'<div class="empty"><div class="big">🔍</div><b>אין משימות שתואמות לסינון</b></div>'; }
 
+  /* ---- Roadmap (HTML gantt) ---- */
+  function rmFilter(t){ var f=S.filters,q=f.q.toLowerCase(); // like visible() but NOT hideDone (we need done for progress)
+    if(f.statuses.size && !f.statuses.has(t.status)) return false;
+    if(f.cats.size && !f.cats.has(t.category)) return false;
+    if(q && (t.task+' '+t.category).toLowerCase().indexOf(q)<0) return false;
+    return true; }
+  function taskSpan(t){ var s=isISO(t.start)?t.start:(isISO(t.due)?t.due:todayISO()); var e=isISO(t.due)?t.due:s; if(e<s)e=s; return {s:s,e:e}; }
+  function renderRoadmap(){
+    ensureDone(function(){
+      var all=S.tasks.filter(rmFilter);
+      if(!all.length){ $('content').innerHTML='<div class="rm"><div class="rm-empty">אין מה להציג. הוסף תאריכי התחלה/יעד למשימות.</div></div>'; return; }
+      // time bounds
+      var min=todayISO(),max=todayISO();
+      all.forEach(t=>{ var sp=taskSpan(t); if(sp.s<min)min=sp.s; if(sp.e>max)max=sp.e; });
+      min=addDaysISO(min,-3); max=addDaysISO(max,3); if(daysBetween(min,max)<14) max=addDaysISO(min,30);
+      var total=daysBetween(min,max); function pos(iso){ return Math.max(0,Math.min(100, daysBetween(min,iso)/total*100)); }
+      // groups
+      var gs=groups(); var by={}; gs.forEach(g=>by[g.key]=[]); all.forEach(t=>{ var k=groupKeyOf(t); (by[k]||(by[k]=[])).push(t); });
+      // month ticks
+      var ticks=''; var d=new Date(min+'T00:00:00'); d.setDate(1);
+      while(true){ var iso=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-01'; if(iso>max)break; if(iso>=min){ ticks+='<span class="tick" style="inset-inline-start:'+pos(iso)+'%">'+(d.getMonth()+1)+'/'+String(d.getFullYear()).slice(2)+'</span>'; } d.setMonth(d.getMonth()+1); }
+      var todayPos=pos(todayISO());
+      var html='<div class="rm"><div class="rm-axis"><div class="lane-head-sp"></div><div class="ticks">'+ticks+'</div></div>';
+      gs.forEach(function(g){ var items=by[g.key]||[]; if(!items.length && g.key!=='') return; // skip empty named groups, keep "unassigned" if has items
+        if(!items.length) return;
+        var doneN=items.filter(t=>t.status==='DONE').length; var pct=items.length?Math.round(doneN/items.length*100):0;
+        var active=items.filter(t=>t.status!=='DONE');
+        var bars=''; var grid='';
+        // light grid per month
+        var dd=new Date(min+'T00:00:00'); dd.setDate(1);
+        while(true){ var gi=dd.getFullYear()+'-'+String(dd.getMonth()+1).padStart(2,'0')+'-01'; if(gi>max)break; if(gi>=min) grid+='<i style="inset-inline-start:'+pos(gi)+'%"></i>'; dd.setMonth(dd.getMonth()+1); }
+        items.forEach(function(t,idx){ var sp=taskSpan(t); var l=pos(sp.s); var w=Math.max(1.5,pos(sp.e)-l); var top=8+(idx%6)*28; // stack a bit
+          bars+='<div class="bar'+(t.status==='DONE'?' done':'')+'" draggable="true" data-id="'+esc(t.id)+'" title="'+esc(t.task)+'" style="--cat:'+catColor(t.category)+';inset-inline-start:'+l+'%;width:'+w+'%;top:'+top+'px">'+esc(t.task)+'</div>'; });
+        var trackH=8+Math.max(1,Math.min(items.length,6))*28+8;
+        html+='<div class="rm-lane" data-key="'+esc(g.key)+'" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">'+
+          '<div class="lane-head"><div class="nm"><span class="stripe" style="background:'+g.color+'"></span>'+esc(g.label)+'</div><div class="pr"><i style="width:'+pct+'%"></i></div><div class="pct">'+doneN+'/'+items.length+' הושלמו · '+pct+'%</div></div>'+
+          '<div class="track" style="min-height:'+trackH+'px"><div class="grid">'+grid+'</div><div class="today" style="inset-inline-start:'+todayPos+'%"></div>'+bars+'</div>'+
+        '</div>';
+      });
+      html+='</div>'; $('content').innerHTML=html; wireDrag();
+    });
+  }
+
   function renderSkeleton(){ var h='<div class="skel">'; for(var i=0;i<4;i++){ h+='<div class="scol">'; for(var j=0;j<3;j++)h+='<div class="sc"></div>'; h+='</div>'; } h+='</div>'; $('content').innerHTML=h; }
 
-  /* ---- drag & drop ---- */
+  /* ---- drag & drop (cards + bars) ---- */
   var dragId=null;
-  function wireDrag(){ document.querySelectorAll('.card').forEach(function(c){
-    c.addEventListener('dragstart',function(e){ if(e.target.closest('.name,.cat-edit,.note,.note-edit,select,input,a,button,textarea')){ e.preventDefault(); return; } dragId=c.getAttribute('data-id'); c.classList.add('dragging'); e.dataTransfer.effectAllowed='move'; });
+  function wireDrag(){ document.querySelectorAll('.card,.bar').forEach(function(c){
+    c.addEventListener('dragstart',function(e){ if(c.classList.contains('card') && e.target.closest('.name,.cat-edit,.note,.note-edit,select,input,a,button,textarea')){ e.preventDefault(); return; } dragId=c.getAttribute('data-id'); c.classList.add('dragging'); e.dataTransfer.effectAllowed='move'; });
     c.addEventListener('dragend',function(){ c.classList.remove('dragging'); dragId=null; }); }); }
   window.onDragOver=function(e){ e.preventDefault(); e.currentTarget.classList.add('drop'); };
   window.onDragLeave=function(e){ e.currentTarget.classList.remove('drop'); };
   window.onDrop=function(e){ e.preventDefault(); e.currentTarget.classList.remove('drop'); if(!dragId)return; var key=e.currentTarget.getAttribute('data-key'); var t=find(dragId); if(!t)return;
     if(S.groupBy==='status'){ if(t.status!==key) changeStatus(dragId,key); }
-    else if(S.groupBy==='priority'){ setField(dragId,'priority',key,function(){ t.urgency=key; render(); }); }
-    else if(S.groupBy==='category'){ var c=key==='(ללא קטגוריה)'?'':key; setField(dragId,'category',c,function(){ t.category=c; buildFilters(); render(); }); }
-    else if(S.groupBy==='date'){ var iso=bucketToDate(key); setField(dragId,'due',iso,function(){ t.due=iso; render(); }); } };
+    else if(S.groupBy==='priority'){ t.urgency=key; setField(dragId,'priority',key,function(){ render(); }); }
+    else if(S.groupBy==='category'){ var c=key==='(ללא קטגוריה)'?'':key; t.category=c; setField(dragId,'category',c,function(){ buildFilters(); render(); }); }
+    else if(S.groupBy==='milestone'){ t.milestoneId=key; srun('webAssignMilestone',[[dragId],key],function(){ render(); toast('שויך ✓'); }); }
+    else if(S.groupBy==='date'){ var iso=bucketToDate(key); t.due=iso; setField(dragId,'due',iso,function(){ render(); }); } };
   function bucketToDate(k){ var t=todayISO(); if(k==='today')return t; if(k==='tomorrow')return addDaysISO(t,1); if(k==='week')return addDaysISO(t,7); if(k==='later')return addDaysISO(t,30); if(k==='overdue')return addDaysISO(t,-1); return ''; }
 
   /* ---- mutations ---- */
-  function changeStatus(id,ns){ var t=find(id); if(!t)return; var prev=t.status; t.status=ns; render();
+  function changeStatus(id,ns){ var t=find(id); if(!t)return; var prev=t.status; t.status=ns; if(!S.doneLoaded){ if(ns==='DONE'&&prev!=='DONE')S.doneCount++; if(prev==='DONE'&&ns!=='DONE')S.doneCount=Math.max(0,S.doneCount-1); } render();
     srun('webUpdateStatus',[id,ns],function(){ if(ns==='DONE') toastUndo('סומן כהושלם ✓',function(){ revertStatus(id,prev); }); else toast('עודכן ✓'); }, function(e){ t.status=prev; render(); toast('שגיאה: '+e.message,true); }); }
-  function revertStatus(id,prev){ var t=find(id); if(!t)return; t.status=prev; render(); srun('webUpdateStatus',[id,prev],function(){ toast('בוטל'); }); }
+  function revertStatus(id,prev){ var t=find(id); if(!t)return; if(!S.doneLoaded && t.status==='DONE' && prev!=='DONE')S.doneCount=Math.max(0,S.doneCount-1); t.status=prev; render(); srun('webUpdateStatus',[id,prev],function(){ toast('בוטל'); }); }
   function setField(id,field,value,ok){ var o={}; o[field]=value; srun('webUpdateTask',[id,o],ok||function(){ toast('נשמר ✓'); }); }
   window.onStatus=function(sel){ changeStatus(sel.getAttribute('data-id'),sel.value); };
   window.onPri=function(sel){ var id=sel.getAttribute('data-id'); var t=find(id); if(t)t.urgency=sel.value; setField(id,'priority',sel.value,function(){ render(); toast('עדיפות עודכנה ✓'); }); };
-  window.onDue=function(inp){ var id=inp.getAttribute('data-id'); var v=inp.value; var t=find(id); if(t){ t.due=v; } setField(id,'due',v,function(){ render(); toast('תאריך עודכן ✓'); }); };
+  window.onDue=function(inp){ var id=inp.getAttribute('data-id'); var v=inp.value; var t=find(id); if(t)t.due=v; setField(id,'due',v,function(){ render(); toast('תאריך עודכן ✓'); }); };
+  window.onStart=function(inp){ var id=inp.getAttribute('data-id'); var v=inp.value; var t=find(id); if(t)t.start=v; setField(id,'start',v,function(){ if(S.view==='roadmap')render(); toast('תאריך התחלה עודכן ✓'); }); };
+  window.onMs=function(sel){ var id=sel.getAttribute('data-id'); var v=sel.value; var t=find(id); if(t)t.milestoneId=v; srun('webAssignMilestone',[[id],v],function(){ if(S.view!=='board')render(); toast('שויך ✓'); }); };
   window.onNameKey=function(e,el){ if(e.key==='Enter'){ e.preventDefault(); el.blur(); } else if(e.key==='Escape'){ el.textContent=el.getAttribute('data-orig'); el.blur(); } };
   window.onNameBlur=function(el){ var id=el.getAttribute('data-id'); var txt=el.textContent.trim(); var orig=el.getAttribute('data-orig'); if(!txt){ el.textContent=orig; return; } if(txt!==orig){ var t=find(id); if(t)t.task=txt; el.setAttribute('data-orig',txt); setField(id,'task',txt,function(){ toast('עודכן ✓'); }); } };
   window.onCatKey=function(e,el){ if(e.key==='Enter'){ e.preventDefault(); el.blur(); } else if(e.key==='Escape'){ el.textContent=el.getAttribute('data-orig'); el.blur(); } };
@@ -360,18 +474,46 @@
   /* ---- selection / bulk ---- */
   window.onSel=function(ev,enc){ ev.stopPropagation(); var id=decodeURIComponent(enc); S.sel.has(id)?S.sel.delete(id):S.sel.add(id); render(); };
   function renderBulk(){ var b=$('bulk'); if(!S.sel.size){ b.classList.remove('show'); return; }
-    b.innerHTML='<b>'+S.sel.size+' נבחרו</b><select id="bulkStatus"><option value="">שנה סטטוס…</option>'+STATUSES.map(s=>'<option value="'+s.key+'">'+s.label+'</option>').join('')+'</select><button class="bbtn" id="bulkDone">סמן כהושלם</button><button class="bbtn" id="bulkClear">נקה</button>';
-    b.classList.add('show'); $('bulkStatus').addEventListener('change',function(){ if(this.value)bulkStatus(this.value); }); $('bulkDone').addEventListener('click',function(){ bulkStatus('DONE'); }); $('bulkClear').addEventListener('click',function(){ S.sel.clear(); render(); }); }
-  function bulkStatus(s){ var ids=Array.from(S.sel); ids.forEach(id=>{ var t=find(id); if(t)t.status=s; }); S.sel.clear(); render(); showOverlay(true); srun('webBulkUpdateStatus',[ids,s],function(){ showOverlay(false); toast(ids.length+' עודכנו ✓'); }); }
+    b.innerHTML='<b>'+S.sel.size+' נבחרו</b>'+
+      '<select id="bulkStatus"><option value="">שנה סטטוס…</option>'+STATUSES.map(s=>'<option value="'+s.key+'">'+s.label+'</option>').join('')+'</select>'+
+      '<select id="bulkMs"><option value="__none__">שייך למיילסטון…</option><option value="">◇ ללא</option>'+S.milestones.map(m=>'<option value="'+esc(m.id)+'">'+esc(m.name)+'</option>').join('')+'</select>'+
+      '<button class="bbtn" id="bulkClear">נקה</button>';
+    b.classList.add('show');
+    $('bulkStatus').addEventListener('change',function(){ if(this.value)bulkStatus(this.value); });
+    $('bulkMs').addEventListener('change',function(){ if(this.value!=='__none__')bulkMs(this.value); });
+    $('bulkClear').addEventListener('click',function(){ S.sel.clear(); render(); }); }
+  function bulkStatus(s){ var ids=Array.from(S.sel); ids.forEach(id=>{ var t=find(id); if(t){ if(!S.doneLoaded){ if(s==='DONE'&&t.status!=='DONE')S.doneCount++; if(t.status==='DONE'&&s!=='DONE')S.doneCount=Math.max(0,S.doneCount-1);} t.status=s; } }); S.sel.clear(); render(); showOverlay(true); srun('webBulkUpdateStatus',[ids,s],function(){ showOverlay(false); toast(ids.length+' עודכנו ✓'); }); }
+  function bulkMs(mid){ var ids=Array.from(S.sel); ids.forEach(id=>{ var t=find(id); if(t)t.milestoneId=mid; }); S.sel.clear(); render(); showOverlay(true); srun('webAssignMilestone',[ids,mid],function(){ showOverlay(false); toast(ids.length+' שויכו ✓'); }); }
 
-  /* ---- add panel (new task only) ---- */
+  /* ---- add-task panel ---- */
   function openPanel(){ $('scrim').classList.add('show'); $('panel').classList.add('show'); }
   function closePanel(){ $('scrim').classList.remove('show'); $('panel').classList.remove('show'); }
   function fillPriPicker(){ var el=$('pPri'); el.innerHTML=''; el.dataset.val='';
     [{key:'',label:'—',color:'var(--muted)'}].concat(PRIORITIES).forEach(function(p){ var b=document.createElement('button'); b.textContent=p.label||p.key; b.addEventListener('click',function(){ el.querySelectorAll('button').forEach(x=>{x.classList.remove('on');x.style.background='';}); b.classList.add('on'); b.style.background=p.color; el.dataset.val=p.key; }); el.appendChild(b); }); }
-  function openNew(){ $('pTask').value=''; $('pCat').value=''; $('pDue').value=''; $('pNotes').value=''; fillPriPicker(); openPanel(); setTimeout(()=>$('pTask').focus(),250); }
-  function savePanel(){ var task=$('pTask').value.trim(); if(!task){ toast('חסר שם משימה',true); $('pTask').focus(); return; } var cat=$('pCat').value.trim(),pri=$('pPri').dataset.val||'',due=$('pDue').value,notes=$('pNotes').value; showOverlay(true);
-    srun('webAddTask',[cat,task,pri,due,notes],function(res){ S.tasks=res.tasks||[]; S.colors=res.colors||{}; buildFilters(); render(); showOverlay(false); closePanel(); toast('משימה נוספה ✓'); }); }
+  function openNew(){ $('pTask').value=''; $('pCat').value=''; $('pStart').value=''; $('pDue').value=''; $('pNotes').value=''; fillPriPicker();
+    $('pMsSel').innerHTML='<option value="">◇ ללא מיילסטון</option>'+S.milestones.map(m=>'<option value="'+esc(m.id)+'">'+esc(m.name)+'</option>').join(''); openPanel(); setTimeout(()=>$('pTask').focus(),250); }
+  function savePanel(){ var task=$('pTask').value.trim(); if(!task){ toast('חסר שם משימה',true); $('pTask').focus(); return; } var cat=$('pCat').value.trim(),pri=$('pPri').dataset.val||'',start=$('pStart').value,due=$('pDue').value,notes=$('pNotes').value,mid=$('pMsSel').value; showOverlay(true);
+    srun('webAddTask',[cat,task,pri,due,notes],function(res){ S.tasks=res.tasks||[]; S.colors=res.colors||{}; S.doneCount=res.doneCount||0; S.doneLoaded=false; buildFilters();
+      // post-set start (override auto-today if user picked) + milestone, by finding the new task id
+      var nt=S.tasks.find(x=>x.task===task && x.category===cat);
+      var after=function(){ render(); showOverlay(false); closePanel(); toast('משימה נוספה ✓'); };
+      if(nt && (start||mid)){ var f={}; if(start)f.start=start; if(mid)f.milestoneId=mid; if(start)nt.start=start; if(mid)nt.milestoneId=mid; srun('webUpdateTask',[nt.id,f],after); } else after(); }); }
+
+  /* ---- milestones modal ---- */
+  function openMsModal(){ renderMsModal(); $('msModalBg').classList.add('show'); }
+  function closeMsModal(){ $('msModalBg').classList.remove('show'); }
+  function renderMsModal(){ var h='';
+    if(!S.milestones.length) h+='<p style="color:var(--muted)">אין מיילסטונז עדיין. צור אחד למטה.</p>';
+    S.milestones.forEach(function(m){ h+='<div class="m-item"><span class="dot" style="background:'+(m.color||'var(--accent)')+'"></span>'+
+      '<span class="mn">'+esc(m.name)+'</span>'+
+      '<span class="md">'+(m.start?esc(m.start):'—')+' → '+(m.end?esc(m.end):'—')+'</span>'+
+      '<button class="bbtn" style="border-color:var(--border);color:var(--text)" onclick="delMs(\''+encodeURIComponent(m.id)+'\')">מחק</button></div>'; });
+    h+='<div class="m-new"><input id="mnName" placeholder="שם מיילסטון" style="flex:2;min-width:120px"><input id="mnStart" type="date" title="התחלה"><input id="mnEnd" type="date" title="סיום"><button class="btn primary" id="mnAdd">＋ צור</button></div>';
+    $('msModalBody').innerHTML=h;
+    $('mnAdd').addEventListener('click',function(){ var name=$('mnName').value.trim(); if(!name){ toast('חסר שם',true); return; } var color=MS_COLORS[S.milestones.length%MS_COLORS.length]; showOverlay(true);
+      srun('webCreateMilestone',[name,$('mnStart').value,$('mnEnd').value,color],function(list){ S.milestones=list||[]; showOverlay(false); renderMsModal(); render(); toast('מיילסטון נוצר ✓'); }); }); }
+  window.delMs=function(enc){ var id=decodeURIComponent(enc); if(!confirm('למחוק את המיילסטון? משימות משויכות ינותקו.'))return; showOverlay(true);
+    srun('webDeleteMilestone',[id],function(){ S.milestones=S.milestones.filter(m=>m.id!==id); S.tasks.forEach(t=>{ if(t.milestoneId===id)t.milestoneId=''; }); showOverlay(false); renderMsModal(); render(); toast('נמחק'); }); };
 
   /* ---- toast ---- */
   var toastTimer=null;
@@ -379,26 +521,29 @@
   function toastUndo(msg,onUndo){ var t=$('toast'); t.innerHTML=esc(msg)+' <button id="undoBtn">בטל</button>'; t.className='toast show'; clearTimeout(toastTimer); $('undoBtn').addEventListener('click',function(){ clearTimeout(toastTimer); t.className='toast'; onUndo(); }); toastTimer=setTimeout(()=>{t.className='toast';},5000); }
 
   /* ---- top actions ---- */
-  function syncNow(){ showOverlay(true); $('btnSync').disabled=true; srun('webRunSync',[],function(res){ S.tasks=res.tasks||[]; S.colors=res.colors||{}; buildFilters(); render(); showOverlay(false); $('btnSync').disabled=false; toast('סונכרן מ-Gmail ✓'); },function(e){ showOverlay(false); $('btnSync').disabled=false; toast('שגיאה: '+e.message,true); }); }
+  function syncNow(){ showOverlay(true); $('btnSync').disabled=true; srun('webRunSync',[],function(res){ S.tasks=res.tasks||[]; S.colors=res.colors||{}; S.doneCount=res.doneCount||0; S.doneLoaded=false; buildFilters(); render(); showOverlay(false); $('btnSync').disabled=false; toast('סונכרן מ-Gmail ✓'); },function(e){ showOverlay(false); $('btnSync').disabled=false; toast('שגיאה: '+e.message,true); }); }
   function sendSummary(){ $('btnSummary').disabled=true; srun('webSendSummary',[],function(){ $('btnSummary').disabled=false; toast('מייל הסיכום נשלח ✓'); },function(e){ $('btnSummary').disabled=false; toast('שגיאה: '+e.message,true); }); }
 
   /* ---- wire ---- */
   $('search').addEventListener('input',function(){ S.filters.q=this.value; render(); });
   $('groupBy').addEventListener('change',function(){ S.groupBy=this.value; savePrefs(); render(); });
   $('sort').addEventListener('change',function(){ S.sort=this.value; savePrefs(); render(); });
-  $('hideDone').addEventListener('change',function(){ S.filters.hideDone=this.checked; savePrefs(); render(); });
+  $('hideDone').addEventListener('change',function(){ S.filters.hideDone=this.checked; savePrefs(); if(!this.checked) ensureDone(render); else render(); });
   $('vBoard').addEventListener('click',function(){ S.view='board'; applyPrefs(); savePrefs(); render(); });
   $('vList').addEventListener('click',function(){ S.view='list'; applyPrefs(); savePrefs(); render(); });
+  $('vRoad').addEventListener('click',function(){ S.view='roadmap'; applyPrefs(); savePrefs(); render(); });
   $('btnAdd').addEventListener('click',openNew);
+  $('btnMs').addEventListener('click',openMsModal);
   $('btnSync').addEventListener('click',syncNow);
   $('btnSummary').addEventListener('click',sendSummary);
   $('btnRefresh').addEventListener('click',function(){ load(); });
   $('btnTheme').addEventListener('click',function(){ S.theme=S.theme==='dark'?'light':'dark'; applyPrefs(); savePrefs(); });
   $('btnDensity').addEventListener('click',function(){ S.density=S.density==='compact'?'comfortable':'compact'; applyPrefs(); savePrefs(); });
   $('pSave').addEventListener('click',savePanel); $('pCancel').addEventListener('click',closePanel); $('pClose').addEventListener('click',closePanel); $('scrim').addEventListener('click',closePanel);
-  document.querySelectorAll('.date-chips button').forEach(function(b){ b.addEventListener('click',function(){ var d=parseInt(b.dataset.d,10); $('pDue').value=d<0?'':addDaysISO(todayISO(),d); }); });
+  $('msModalClose').addEventListener('click',closeMsModal); $('msModalBg').addEventListener('click',function(e){ if(e.target===$('msModalBg'))closeMsModal(); });
+  document.querySelectorAll('#pDueChips button').forEach(function(b){ b.addEventListener('click',function(){ var d=parseInt(b.dataset.d,10); $('pDue').value=d<0?'':addDaysISO(todayISO(),d); }); });
   document.addEventListener('keydown',function(e){ var typing=/INPUT|TEXTAREA|SELECT/.test(e.target.tagName||'')||e.target.isContentEditable;
-    if(e.key==='Escape'){ if($('panel').classList.contains('show'))closePanel(); else if(S.sel.size){ S.sel.clear(); render(); } return; }
+    if(e.key==='Escape'){ if($('panel').classList.contains('show'))closePanel(); else if($('msModalBg').classList.contains('show'))closeMsModal(); else if(S.sel.size){ S.sel.clear(); render(); } return; }
     if(typing)return; if(e.key==='/'){ e.preventDefault(); $('search').focus(); } else if(e.key.toLowerCase()==='c'){ openNew(); } });
 
   loadPrefs(); applyPrefs(); load(true);
