@@ -766,3 +766,46 @@ function applyColors(sheet, ss) {
   range.setBackgrounds(backgrounds);
   range.setFontColors(fontColors);
 }
+
+/* =====================================================================
+ *  כלי חד-פעמי: מילוי תאריכי התחלה (ויעד היכן שחסר) פיקטיביים לדמו ה-Roadmap.
+ *  ממלא רק תאים ריקים — לא דורס נתונים קיימים. בטוח להרצה חוזרת.
+ *  להרצה: בעורך Apps Script, בחר backfillDemoDates בתפריט הפונקציות ולחץ Run.
+ * ===================================================================== */
+function backfillDemoDates() {
+  const ss = getSpreadsheet_();
+  const sheet = ss.getSheetByName('משימות');
+  const last = sheet.getLastRow();
+  if (last < 2) return 'אין שורות';
+  const n = last - 1;
+  const rng = sheet.getRange(2, 1, n, 10); // A..J
+  const v = rng.getValues();
+  const today = new Date();
+  let startFilled = 0, dueFilled = 0;
+
+  for (let i = 0; i < n; i++) {
+    if (!v[i][2]) continue;            // אין משימה — דלג
+    const span = 4 + ((i * 7) % 18);   // אורך הבר: 4..21 ימים (פסבדו-אקראי לפי שורה)
+    const offset = ((i * 5) % 45) - 14; // פיזור התחלה: -14..30 ימים מהיום
+
+    if (!v[i][8]) { // עמודה I (תאריך התחלה) ריקה
+      let start;
+      if (v[i][5] instanceof Date) {                 // יש תאריך יעד → התחלה = יעד פחות span
+        start = new Date(v[i][5]); start.setDate(start.getDate() - span);
+      } else {                                       // אין יעד → התחלה מפוזרת סביב היום
+        start = new Date(today); start.setDate(start.getDate() + offset);
+      }
+      v[i][8] = start; startFilled++;
+
+      // אם אין תאריך יעד — נוסיף יעד = התחלה + span כדי שלבר יהיה רוחב
+      if (!(v[i][5] instanceof Date) && !v[i][5]) {
+        const due = new Date(start); due.setDate(due.getDate() + span);
+        v[i][5] = due; dueFilled++;
+      }
+    }
+  }
+
+  rng.setValues(v);
+  applyColors(sheet, ss);
+  return 'תאריכי התחלה שמולאו: ' + startFilled + ' · תאריכי יעד שמולאו: ' + dueFilled;
+}
