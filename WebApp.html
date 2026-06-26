@@ -129,9 +129,9 @@
     .lane-head .pct{ font-size:11px; color:var(--muted); margin-top:3px; font-weight:600; }
     .track{ position:relative; flex:1; min-height:54px; padding:8px 0; }
     .track .grid{ position:absolute; inset:0; } .track .grid i{ position:absolute; top:0; height:100%; border-inline-start:1px solid var(--border); opacity:.5; }
-    .bar{ position:absolute; height:24px; border-radius:7px; background:var(--cat,#9aa3b2); color:#10202a; font-size:11px; font-weight:700; line-height:24px; padding:0 8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; box-shadow:var(--shadow); cursor:grab; border:1px solid rgba(0,0,0,.06); }
-    .bar.done{ opacity:.5; }
-    .bar.today-line{} .track .today{ position:absolute; top:0; height:100%; width:2px; background:var(--danger); opacity:.6; }
+    .rmbar{ position:absolute; height:24px; border-radius:7px; background:var(--cat,#9aa3b2); color:#10202a; font-size:11px; font-weight:700; line-height:24px; padding:0 8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; box-shadow:var(--shadow); cursor:grab; border:1px solid rgba(0,0,0,.06); }
+    .rmbar.done{ opacity:.5; }
+    .track .today{ position:absolute; top:0; height:100%; width:2px; background:var(--danger); opacity:.6; }
     .rm-empty{ padding:40px; text-align:center; color:var(--muted); }
 
     .scrim{ position:fixed; inset:0; background:rgba(16,24,40,.45); opacity:0; pointer-events:none; transition:opacity .2s; z-index:55; } .scrim.show{ opacity:1; pointer-events:auto; }
@@ -425,7 +425,7 @@
         var dd=new Date(min+'T00:00:00'); dd.setDate(1);
         while(true){ var gi=dd.getFullYear()+'-'+String(dd.getMonth()+1).padStart(2,'0')+'-01'; if(gi>max)break; if(gi>=min) grid+='<i style="inset-inline-start:'+pos(gi)+'%"></i>'; dd.setMonth(dd.getMonth()+1); }
         items.forEach(function(t,idx){ var sp=taskSpan(t); var l=pos(sp.s); var w=Math.max(1.5,pos(sp.e)-l); var top=8+(idx%6)*28; // stack a bit
-          bars+='<div class="bar'+(t.status==='DONE'?' done':'')+'" draggable="true" data-id="'+esc(t.id)+'" title="'+esc(t.task)+'" style="--cat:'+catColor(t.category)+';inset-inline-start:'+l+'%;width:'+w+'%;top:'+top+'px">'+esc(t.task)+'</div>'; });
+          bars+='<div class="rmbar'+(t.status==='DONE'?' done':'')+'" draggable="true" data-id="'+esc(t.id)+'" title="'+esc(t.task)+'" style="--cat:'+catColor(t.category)+';inset-inline-start:'+l+'%;width:'+w+'%;top:'+top+'px">'+esc(t.task)+'</div>'; });
         var trackH=8+Math.max(1,Math.min(items.length,6))*28+8;
         html+='<div class="rm-lane" data-key="'+esc(g.key)+'" ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">'+
           '<div class="lane-head"><div class="nm"><span class="stripe" style="background:'+g.color+'"></span>'+esc(g.label)+'</div><div class="pr"><i style="width:'+pct+'%"></i></div><div class="pct">'+doneN+'/'+items.length+' הושלמו · '+pct+'%</div></div>'+
@@ -440,7 +440,7 @@
 
   /* ---- drag & drop (cards + bars) ---- */
   var dragId=null;
-  function wireDrag(){ document.querySelectorAll('.card,.bar').forEach(function(c){
+  function wireDrag(){ document.querySelectorAll('.card,.rmbar').forEach(function(c){
     c.addEventListener('dragstart',function(e){ if(c.classList.contains('card') && e.target.closest('.name,.cat-edit,.note,.note-edit,select,input,a,button,textarea')){ e.preventDefault(); return; } dragId=c.getAttribute('data-id'); c.classList.add('dragging'); e.dataTransfer.effectAllowed='move'; });
     c.addEventListener('dragend',function(){ c.classList.remove('dragging'); dragId=null; }); }); }
   window.onDragOver=function(e){ e.preventDefault(); e.currentTarget.classList.add('drop'); };
