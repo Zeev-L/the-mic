@@ -43,6 +43,13 @@
     .btn:disabled{ opacity:.55; cursor:default; box-shadow:none; transform:none; }
     .icon-only{ width:38px; padding:9px 0; justify-content:center; }
 
+    .quickadd{ display:flex; align-items:center; gap:9px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:9px 12px; box-shadow:var(--shadow); margin-bottom:14px; }
+    .quickadd .qa-icon{ font-size:17px; flex:none; }
+    .quickadd #qaInput{ flex:1; min-width:140px; font-size:15px; font-weight:600; border:none; background:transparent; padding:8px 4px; }
+    .quickadd #qaInput:focus{ box-shadow:none; }
+    .quickadd #qaDue{ width:150px; flex:none; }
+    .quickadd .btn{ flex:none; }
+    @media (max-width:600px){ .quickadd{ flex-wrap:wrap; } .quickadd #qaInput{ width:100%; flex:1 1 100%; order:1; } .quickadd #qaDue{ order:2; flex:1; } .quickadd .btn{ order:3; } }
     .stats{ display:flex; gap:9px; flex-wrap:wrap; margin-bottom:14px; }
     .chip{ background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:9px 13px; display:flex; align-items:center; gap:10px; box-shadow:var(--shadow); cursor:pointer; transition:all .15s; user-select:none; }
     .chip:hover{ transform:translateY(-1px); box-shadow:var(--shadow-hover); }
@@ -188,6 +195,13 @@
         <button class="btn icon-only" id="btnDensity" title="צפיפות תצוגה (קומפקטי/נוח)">↕</button>
         <button class="btn icon-only" id="btnRefresh" title="רענן">↻</button>
       </div>
+    </div>
+
+    <div class="quickadd">
+      <span class="qa-icon">⚡</span>
+      <input type="text" id="qaInput" placeholder="הוספה מהירה:  קטגוריה - משימה   (Enter להוספה)">
+      <input type="date" id="qaDue" title="תאריך יעד (לא חובה)">
+      <button class="btn primary" id="qaAdd">＋ הוסף</button>
     </div>
 
     <div class="stats" id="stats"></div>
@@ -488,6 +502,18 @@
   /* ---- add-task panel ---- */
   function openPanel(){ $('scrim').classList.add('show'); $('panel').classList.add('show'); }
   function closePanel(){ $('scrim').classList.remove('show'); $('panel').classList.remove('show'); }
+  /* ---- quick add (top bar) — מבנה "קטגוריה - משימה" כמו במייל ---- */
+  function parseQuick(text){ var t=String(text||'').trim(); var parts=t.split(' - ');
+    if(parts.length>=2){ return { category:parts[0].trim(), task:parts.slice(1).join(' - ').trim() }; }
+    return { category:'', task:t }; }
+  function quickAdd(){ var raw=$('qaInput').value.trim(); if(!raw) return;
+    var p=parseQuick(raw); if(!p.task){ toast('חסר שם משימה',true); return; }
+    var due=$('qaDue').value || todayISO(); // ברירת מחדל: יעד = היום (התחלה נקבעת אוטומטית להיום בשרת)
+    $('qaAdd').disabled=true; showOverlay(true);
+    srun('webAddTask',[p.category,p.task,'',due,''],function(res){ S.tasks=res.tasks||[]; S.colors=res.colors||{}; S.doneCount=res.doneCount||0; S.doneLoaded=false; buildFilters(); render();
+      showOverlay(false); $('qaAdd').disabled=false; $('qaInput').value=''; $('qaDue').value=''; $('qaInput').focus(); toast('נוספה: '+p.task+' ✓'); },
+      function(e){ showOverlay(false); $('qaAdd').disabled=false; toast('שגיאה: '+e.message,true); }); }
+
   function fillPriPicker(){ var el=$('pPri'); el.innerHTML=''; el.dataset.val='';
     [{key:'',label:'—',color:'var(--muted)'}].concat(PRIORITIES).forEach(function(p){ var b=document.createElement('button'); b.textContent=p.label||p.key; b.addEventListener('click',function(){ el.querySelectorAll('button').forEach(x=>{x.classList.remove('on');x.style.background='';}); b.classList.add('on'); b.style.background=p.color; el.dataset.val=p.key; }); el.appendChild(b); }); }
   function openNew(){ $('pTask').value=''; $('pCat').value=''; $('pStart').value=''; $('pDue').value=''; $('pNotes').value=''; fillPriPicker();
@@ -533,6 +559,8 @@
   $('vList').addEventListener('click',function(){ S.view='list'; applyPrefs(); savePrefs(); render(); });
   $('vRoad').addEventListener('click',function(){ S.view='roadmap'; applyPrefs(); savePrefs(); render(); });
   $('btnAdd').addEventListener('click',openNew);
+  $('qaAdd').addEventListener('click',quickAdd);
+  $('qaInput').addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); quickAdd(); } });
   $('btnMs').addEventListener('click',openMsModal);
   $('btnSync').addEventListener('click',syncNow);
   $('btnSummary').addEventListener('click',sendSummary);
@@ -544,7 +572,7 @@
   document.querySelectorAll('#pDueChips button').forEach(function(b){ b.addEventListener('click',function(){ var d=parseInt(b.dataset.d,10); $('pDue').value=d<0?'':addDaysISO(todayISO(),d); }); });
   document.addEventListener('keydown',function(e){ var typing=/INPUT|TEXTAREA|SELECT/.test(e.target.tagName||'')||e.target.isContentEditable;
     if(e.key==='Escape'){ if($('panel').classList.contains('show'))closePanel(); else if($('msModalBg').classList.contains('show'))closeMsModal(); else if(S.sel.size){ S.sel.clear(); render(); } return; }
-    if(typing)return; if(e.key==='/'){ e.preventDefault(); $('search').focus(); } else if(e.key.toLowerCase()==='c'){ openNew(); } });
+    if(typing)return; if(e.key==='/'){ e.preventDefault(); $('search').focus(); } else if(e.key.toLowerCase()==='c'){ e.preventDefault(); $('qaInput').focus(); } });
 
   loadPrefs(); applyPrefs(); load(true);
 </script>
