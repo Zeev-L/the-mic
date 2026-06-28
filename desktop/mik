@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# mik — quick-add a task to מיק from anywhere:  mik "category - task"
+# Posts to your "Anyone" web-app webhook (URL is the secret; see ~/.mik/config).
+set -uo pipefail
+CONFIG="$HOME/.mik/config"
+[ -f "$CONFIG" ] && source "$CONFIG"
+TASK="$*"
+[ -z "${TASK// /}" ] && { echo 'usage: mik "category - task"'; exit 1; }
+if [ -z "${MIK_URL:-}" ] || [ "${MIK_URL}" = "PASTE_YOUR_ANYONE_WEBHOOK_EXEC_URL_HERE" ]; then
+  echo "mik: set MIK_URL in ~/.mik/config (your 'Anyone' web-app /exec URL)"; exit 1
+fi
+curl -s -L --max-time 20 --data-urlencode "task=${TASK}" "${MIK_URL}"

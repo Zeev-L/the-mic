@@ -1,0 +1,8 @@
+# מיק desktop quick-capture — copy to ~/.mik/config and fill in your URLs (chmod 600).
+# This file is the SECRET (the webhook URL gates writes). Never commit your real ~/.mik/config.
+
+# Your "Anyone" web-app deployment /exec URL (Deploy → New deployment → Web app → Anyone):
+MIK_URL="PASTE_YOUR_ANYONE_WEBHOOK_EXEC_URL_HERE"
+
+# Your main web-app /exec URL (used by the 'פתח את מיק' menu item):
+MIK_APP_URL="PASTE_YOUR_MAIN_WEBAPP_EXEC_URL_HERE"
