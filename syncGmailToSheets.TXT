@@ -809,3 +809,35 @@ function backfillDemoDates() {
   applyColors(sheet, ss);
   return 'תאריכי התחלה שמולאו: ' + startFilled + ' · תאריכי יעד שמולאו: ' + dueFilled;
 }
+
+/* =====================================================================
+ *  Webhook ללכידה מהירה מהדסקטופ (CLI / שורת התפריטים).
+ *  מקבל POST עם token + task ("קטגוריה - משימה") + due אופציונלי, ומוסיף משימה.
+ *  דורש deployment עם גישת "Anyone" + Script Property בשם WEBHOOK_TOKEN.
+ *  ה-UI הראשי (/exec "רק אני") לא מושפע — זה endpoint נפרד, מוסיף-בלבד.
+ * ===================================================================== */
+function doPost(e) {
+  function out(obj){ return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON); }
+  try {
+    var p = (e && e.parameter) || {};
+    var token = PropertiesService.getScriptProperties().getProperty('WEBHOOK_TOKEN');
+    if (!token || String(p.token || '') !== token) return out({ ok:false, error:'unauthorized' });
+
+    var raw = String(p.task || '').trim();
+    if (!raw) return out({ ok:false, error:'empty task' });
+
+    // פיצול "קטגוריה - משימה" (כמו במייל). בלי " - " → הכול שם המשימה.
+    var parts = raw.split(' - ');
+    var category = '', task = raw;
+    if (parts.length >= 2) { category = parts[0].trim(); task = parts.slice(1).join(' - ').trim(); }
+    if (!task) return out({ ok:false, error:'empty task' });
+
+    // due אופציונלי; אם לא סופק → היום (תאריך התחלה נקבע אוטומטית להיום ב-webAddTask).
+    var due = String(p.due || '').trim() || Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
+
+    webAddTask(category, task, '', due, '');
+    return out({ ok:true, category: category, task: task, due: due });
+  } catch (err) {
+    return out({ ok:false, error: String(err) });
+  }
+}
