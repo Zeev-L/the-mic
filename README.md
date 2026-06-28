@@ -62,25 +62,28 @@
 
 ---
 
-## 🤖 התקנה עם Claude Code
+## 🤖 הקמה מאפס עם Claude Code (Runbook מלא)
 
-אפשר לתת ל-Claude Code להתקין במקומך. הפנה אותו ל-repo ואמור *"קרא את ה-README
-והתקן את מנהל המשימות."* החלוקה ברורה — מה הסוכן יכול לבד, ומה דורש אותך:
+> **איך להשתמש:** במחשב/יוזר חדש, אמור ל-Claude:
+> *"הקם לי את מיק מאפס לפי ה-Runbook ב-README של `github.com/Zeev-L/the-mic` — אני מחובר לחשבון Google ב-Chrome."*
+> **דרישה מוקדמת:** Chrome מחובר לחשבון Google שלך + תוסף **Claude in Chrome** מחובר (כך Claude נוהג בעורך Apps Script ומפרס). בלי זה — Claude רק ינחה אותך ידנית לפי הסעיפים למטה.
+>
+> Claude מריץ את צעדי 🤖, ועוצר ומעביר לך את צעדי 👤. **אין סודות להביא — הכול נוצר טרי.**
 
-**מה Claude Code יכול לעשות:**
+| # | צעד | מי |
+|---|-----|----|
+| 1 | צור **Google Sheet** חדש → **Extensions → Apps Script** | 👤 |
+| 2 | הדבק את [`syncGmailToSheets.TXT`](./syncGmailToSheets.TXT) ל-`Code.gs`, וצור קובץ **HTML בשם `WebApp`** עם תוכן [`WebApp.html`](./WebApp.html); שמור | 🤖 |
+| 3 | הרץ סנכרון ראשון (`syncGmailToSheetsV2`) → נוצרים הגיליונות "משימות"/"צבעים"/"Milestones" | 🤖 |
+| 4 | **אישור OAuth** בהרצה הראשונה (Gmail + Sheets) — לחץ **Allow** | 👤 *(הצעד היחיד שאין לו תחליף)* |
+| 5 | צור תגית `MyTasks` + מסנן `from:me to:me -{cc:me bcc:me}` (ראה "הגדרת Gmail" למטה) — Claude ינחה צעד-צעד | 👤 |
+| 6 | פרוס את ה-UI: Deploy → New deployment → Web app → Execute as **Me**, access **Only myself** → זו כתובת `MIK_APP_URL` | 🤖 |
+| 7 | פרוס **webhook**: Deploy נוסף → Web app → access **Anyone** → זו כתובת ה-webhook הסודית `MIK_URL` (ללכידה מהדסקטופ) | 🤖 |
+| 8 | טריגרים (אופציונלי): סנכרון שעתי + סיכום יומי — מהתפריט | 🤖 |
+| 9 | לכידה מהדסקטופ: `./desktop/install.sh` + מילוי `~/.mik/config` בכתובות מצעדים 6–7 | 🤖 |
 
-- לייצר/לעדכן את הקוד (`syncGmailToSheets.TXT`) ואת ה-Web App (`WebApp.html`).
-- אם אתה משתמש ב-[`clasp`](https://github.com/google/clasp) — ליצור `.clasp.json`,
-  לעשות `clasp push` ו-`clasp deploy`.
-- לנסח את קוד הטריגר השעתי וההגדרות.
-
-**מה דורש אותך (חשבון Google + הרשאות — אי אפשר בסקריפט):**
-
-1. **ליצור את ה-Google Sheet ופרויקט ה-Apps Script** (Extensions → Apps Script)
-   ולהדביק את הקוד.
-2. **לאשר את הרשאות ה-OAuth** בהרצה הראשונה (Gmail + Sheets).
-3. **להגדיר את פילטר ה-Gmail** שמדביק את התגית `MyTasks` (ראה הסעיף הבא).
-4. **להוסיף את הטריגר השעתי** דרך עורך ה-Apps Script (Triggers).
+> ⚠️ **רק צעד 4 (OAuth) ואישורי-קליק קצרים דורשים אותך** — Claude לא מאשר הרשאות בשם חשבון Google שלך. כל השאר אוטומטי כשהדפדפן מחובר.
+> 💡 אם אין Claude-in-Chrome — בצע ידנית לפי "התקנה (פעם אחת)" למעלה + הסעיפים הבאים; Claude עדיין יכול לכתוב/לעדכן קוד ולהכין הכל.
 
 ---
 
