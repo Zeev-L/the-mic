@@ -813,15 +813,14 @@ function backfillDemoDates() {
 /* =====================================================================
  *  Webhook ללכידה מהירה מהדסקטופ (CLI / שורת התפריטים).
  *  מקבל POST עם token + task ("קטגוריה - משימה") + due אופציונלי, ומוסיף משימה.
- *  דורש deployment עם גישת "Anyone" + Script Property בשם WEBHOOK_TOKEN.
+ *  דורש deployment עם גישת "Anyone". מודל secret-URL: כתובת ה-/exec הארוכה היא הסוד (בלי טוקן נפרד).
  *  ה-UI הראשי (/exec "רק אני") לא מושפע — זה endpoint נפרד, מוסיף-בלבד.
  * ===================================================================== */
 function doPost(e) {
   function out(obj){ return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON); }
   try {
     var p = (e && e.parameter) || {};
-    var token = PropertiesService.getScriptProperties().getProperty('WEBHOOK_TOKEN');
-    if (!token || String(p.token || '') !== token) return out({ ok:false, error:'unauthorized' });
+    // secret-URL model: the deployment is "Anyone" but the long random /exec URL is the secret (Slack-style). add-only.
 
     var raw = String(p.task || '').trim();
     if (!raw) return out({ ok:false, error:'empty task' });
