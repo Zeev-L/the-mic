@@ -105,7 +105,7 @@ function sendDailySummary() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName('משימות');
   const recipient = Session.getEffectiveUser().getEmail();
-  const subjectLine = '📋 סיכום משימות יומי — ' +
+  const subjectLine = L_('📋 סיכום משימות יומי — ', '📋 Daily task summary — ') +
     Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'dd/MM/yyyy');
 
   // אין גיליון או אין נתונים → שולחים הודעת "אין משימות".
@@ -147,7 +147,7 @@ function sendDailySummary() {
       dueStr = String(dueRaw).trim();
     }
 
-    const key = category || '(ללא קטגוריה)';
+    const key = category || L_('(ללא קטגוריה)', '(no category)');
     if (!groups[key]) groups[key] = [];
     groups[key].push({ task, status, urgency, due: dueStr, overdue });
   });
@@ -164,10 +164,11 @@ function sendDailySummary() {
 
 /** HTML למצב "אין משימות פתוחות". */
 function emptyStateHtml_() {
-  return '<div style="font-family:Arial,Helvetica,sans-serif;direction:rtl;text-align:right;' +
+  var en = getLang_() === 'en';
+  return '<div style="font-family:Arial,Helvetica,sans-serif;direction:' + (en ? 'ltr' : 'rtl') + ';text-align:' + (en ? 'left' : 'right') + ';' +
     'padding:24px;color:#202124;">' +
-    '<h2 style="margin:0 0 8px;">אין משימות פתוחות 🎉</h2>' +
-    '<p style="color:#5f6368;margin:0;">כל המשימות סגורות. תהנה מהיום!</p></div>';
+    '<h2 style="margin:0 0 8px;">' + L_('אין משימות פתוחות 🎉', 'No open tasks 🎉') + '</h2>' +
+    '<p style="color:#5f6368;margin:0;">' + L_('כל המשימות סגורות. תהנה מהיום!', 'All tasks are closed. Enjoy your day!') + '</p></div>';
 }
 
 /** בונה את גוף ה-HTML של הסיכום. */
@@ -178,17 +179,18 @@ function buildSummaryHtml_(groups, stats) {
     'DEPENDENT': '#595959',
   };
   const statusTextColors = { 'OPEN': '#202124', 'IN PROGRESS': '#ffffff', 'DEPENDENT': '#ffffff' };
-  const statusLabels = { 'OPEN': 'פתוח', 'IN PROGRESS': 'בתהליך', 'DEPENDENT': 'תלוי' };
+  var en = getLang_() === 'en', dir = en ? 'ltr' : 'rtl', align = en ? 'left' : 'right';
+  const statusLabels = { 'OPEN': L_('פתוח', 'Open'), 'IN PROGRESS': L_('בתהליך', 'In progress'), 'DEPENDENT': L_('תלוי', 'Blocked') };
 
-  let html = '<div style="font-family:Arial,Helvetica,sans-serif;direction:rtl;text-align:right;' +
+  let html = '<div style="font-family:Arial,Helvetica,sans-serif;direction:' + dir + ';text-align:' + align + ';' +
     'max-width:640px;margin:0 auto;padding:24px;color:#202124;">';
 
   // כותרת + ספירות
-  html += '<h2 style="margin:0 0 4px;">📋 סיכום משימות יומי</h2>';
-  html += '<p style="color:#5f6368;margin:0 0 16px;">יש לך <b>' + stats.totalOpen +
-    '</b> משימות פתוחות &nbsp;·&nbsp; פתוחות: ' + stats.countOpen +
-    ' &nbsp;·&nbsp; בתהליך: ' + stats.countInProgress +
-    ' &nbsp;·&nbsp; תלויות: ' + stats.countDependent + '</p>';
+  html += '<h2 style="margin:0 0 4px;">' + L_('📋 סיכום משימות יומי', '📋 Daily task summary') + '</h2>';
+  html += '<p style="color:#5f6368;margin:0 0 16px;">' + L_('יש לך <b>', 'You have <b>') + stats.totalOpen +
+    L_('</b> משימות פתוחות', '</b> open tasks') + ' &nbsp;·&nbsp; ' + L_('פתוחות: ', 'Open: ') + stats.countOpen +
+    ' &nbsp;·&nbsp; ' + L_('בתהליך: ', 'In progress: ') + stats.countInProgress +
+    ' &nbsp;·&nbsp; ' + L_('תלויות: ', 'Blocked: ') + stats.countDependent + '</p>';
 
   // קטגוריות
   Object.keys(groups).sort().forEach(category => {
@@ -208,7 +210,7 @@ function buildSummaryHtml_(groups, stats) {
       let meta = '';
       if (it.due) {
         meta += it.overdue
-          ? ' <span style="color:#d93025;font-weight:bold;">⚠ באיחור: ' + escapeHtml_(it.due) + '</span>'
+          ? ' <span style="color:#d93025;font-weight:bold;">' + L_('⚠ באיחור: ', '⚠ Overdue: ') + escapeHtml_(it.due) + '</span>'
           : ' <span style="color:#5f6368;">📅 ' + escapeHtml_(it.due) + '</span>';
       }
       if (it.urgency) meta += ' <span style="color:#5f6368;">· ' + escapeHtml_(it.urgency) + '</span>';
@@ -221,7 +223,7 @@ function buildSummaryHtml_(groups, stats) {
     html += '</table>';
   });
 
-  html += '<p style="color:#9aa0a6;font-size:12px;margin-top:24px;">נשלח אוטומטית ממנהל המשימות ב-Google Sheets.</p>';
+  html += '<p style="color:#9aa0a6;font-size:12px;margin-top:24px;">' + L_('נשלח אוטומטית ממנהל המשימות ב-Google Sheets.', 'Sent automatically by the Google Sheets task manager.') + '</p>';
   html += '</div>';
   return html;
 }
