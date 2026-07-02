@@ -252,6 +252,31 @@
     </div>
   </div>
 
+  <!-- Calendar event modal -->
+  <div class="modal-bg" id="calModalBg">
+    <div class="modal" style="width:440px">
+      <h3><span>🗓️ הוסף אירוע ליומן</span><span class="mini" style="cursor:pointer" onclick="closeCalModal()">✕</span></h3>
+      <div class="body">
+        <div class="field" style="margin-bottom:12px"><label>כותרת האירוע</label><input id="calTitle" type="text"></div>
+        <div class="field" style="margin-bottom:12px"><label>תאריך</label><input id="calDate" type="date"></div>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;margin:2px 0 12px;color:var(--text)">
+          <input type="checkbox" id="calAllDay" onchange="calToggleAllDay()" style="width:auto"> אירוע יום שלם
+        </label>
+        <div id="calTimeRow" style="display:flex;gap:10px;margin-bottom:12px">
+          <div class="field" style="flex:1"><label>שעת התחלה</label><input id="calTime" type="time" value="09:00"></div>
+          <div class="field" style="flex:1"><label>משך</label>
+            <select id="calDur"><option value="30">30 דק'</option><option value="60" selected>שעה</option><option value="90">שעה וחצי</option><option value="120">שעתיים</option></select>
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:16px"><label>לוח שנה</label><select id="calCal"><option>טוען…</option></select></div>
+        <div style="display:flex;gap:10px;justify-content:flex-end">
+          <button class="btn" onclick="closeCalModal()">ביטול</button>
+          <button class="btn primary" id="calSubmit" onclick="submitCalEvent()">קבע בלוח השנה</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 <script>
   var S = { tasks:[], colors:{}, milestones:[], doneCount:0, doneLoaded:false,
     view:'board', groupBy:'status', sort:'due',
@@ -374,6 +399,7 @@
   function elCat(t){ return '<span class="cat-edit" contenteditable="true" spellcheck="false" data-id="'+esc(t.id)+'" data-orig="'+esc(t.category||'')+'" onkeydown="onCatKey(event,this)" onblur="onCatBlur(this)">'+esc(t.category||'')+'</span>'; }
   function elNote(t){ var enc=encodeURIComponent(t.id); if(t.notes) return '<div class="note clamp" onclick="editNote(this,\''+enc+'\')">'+esc(t.notes)+'</div>'; return '<div class="note add" onclick="editNote(this,\''+enc+'\')">＋ הערה</div>'; }
   function mailBtn(t){ return t.threadId?'<a class="mini" title="פתח מייל" target="_blank" href="https://mail.google.com/mail/u/0/#all/'+encodeURIComponent(t.threadId)+'">📩</a>':''; }
+  function calBtn(t){ return '<button class="mini" title="הוסף אירוע ליומן" onclick="openCalModal(\''+encodeURIComponent(t.id)+'\')">🗓️</button>'; }
   function selBox(t){ return '<input type="checkbox" class="selbox" title="בחר" '+(S.sel.has(t.id)?'checked':'')+' onclick="onSel(event,\''+encodeURIComponent(t.id)+'\')">'; }
 
   function render(){ renderStats(); if(!S.tasks.length && !S.doneCount){ $('content').innerHTML='<div class="empty"><div class="big">📭</div><b>אין משימות עדיין</b><p>לחץ "＋ משימה" או "סנכרן".</p></div>'; renderBulk(); return; }
@@ -381,7 +407,7 @@
 
   function cardHtml(t){ return '<div class="card'+(t.status==='DONE'?' done':'')+(S.sel.has(t.id)?' sel':'')+'" draggable="true" data-id="'+esc(t.id)+'" style="--cat:'+catColor(t.category)+'">'+
       selBox(t)+'<div class="ctop">'+ctlPri(t)+elCat(t)+'</div>'+elName(t)+elNote(t)+
-      '<div class="crow">'+ctlStatus(t)+mailBtn(t)+'</div>'+
+      '<div class="crow">'+ctlStatus(t)+mailBtn(t)+calBtn(t)+'</div>'+
       '<div class="crow">'+ctlDue(t)+ctlStart(t)+'</div>'+
       '<div class="crow">'+ctlMs(t)+'</div>'+
     '</div>'; }
@@ -402,7 +428,7 @@
         '<div class="lstatus2">'+ctlStatus(t)+'</div>'+
         '<div class="lms">'+ctlMs(t)+'</div>'+
         '<div>'+ctlDue(t)+'</div>'+
-        '<div>'+mailBtn(t)+'</div>'+
+        '<div>'+mailBtn(t)+calBtn(t)+'</div>'+
       '</div>'; });
       html+='</div></div>'; });
     $('content').innerHTML=html||'<div class="empty"><div class="big">🔍</div><b>אין משימות שתואמות לסינון</b></div>'; }
@@ -528,6 +554,36 @@
   /* ---- milestones modal ---- */
   function openMsModal(){ renderMsModal(); $('msModalBg').classList.add('show'); }
   function closeMsModal(){ $('msModalBg').classList.remove('show'); }
+
+  /* ---- calendar event modal ---- */
+  var calCals=null;
+  function calToday(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+  function openCalModal(encId){ var id=decodeURIComponent(encId); var t=find(id); if(!t){ toast('המשימה לא נמצאה',true); return; }
+    $('calTitle').value=(t.category? t.category+' - ':'')+t.task;
+    $('calDate').value=isISO(t.due)? t.due : calToday();
+    $('calAllDay').checked=false; $('calTime').value='09:00'; $('calDur').value='60'; calToggleAllDay();
+    var btn=$('calSubmit'); btn.disabled=false; btn.dataset.tid=id;
+    var sel=$('calCal');
+    if(calCals){ fillCalOptions(sel); }
+    else { sel.innerHTML='<option>טוען…</option>';
+      srun('webListCalendars',[],function(list){ calCals=list||[]; fillCalOptions(sel); },
+        function(e){ calCals=null; sel.innerHTML='<option value="">(יומן ברירת המחדל)</option>'; toast('לא ניתן לטעון יומנים — אשר גישה ליומן מהתפריט בגיליון',true); }); }
+    $('calModalBg').classList.add('show');
+  }
+  function fillCalOptions(sel){ if(!calCals||!calCals.length){ sel.innerHTML='<option value="">(יומן ברירת המחדל)</option>'; return; }
+    sel.innerHTML=calCals.map(function(c){ return '<option value="'+esc(c.id)+'"'+(c.primary?' selected':'')+'>'+esc(c.name)+(c.primary?' (ראשי)':'')+'</option>'; }).join(''); }
+  function calToggleAllDay(){ $('calTimeRow').style.display=$('calAllDay').checked?'none':'flex'; }
+  function closeCalModal(){ $('calModalBg').classList.remove('show'); }
+  function submitCalEvent(){ var btn=$('calSubmit'), id=btn.dataset.tid;
+    var payload={ taskId:id, calendarId:$('calCal').value||'', title:$('calTitle').value.trim(), date:$('calDate').value, allDay:$('calAllDay').checked, time:$('calTime').value, durationMin:parseInt($('calDur').value,10)||60 };
+    if(!payload.title){ toast('חסרה כותרת',true); return; }
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(payload.date)){ toast('בחר תאריך',true); return; }
+    btn.disabled=true; showOverlay(true);
+    srun('webCreateCalendarEvent',[payload],function(res){ showOverlay(false); closeCalModal();
+      var t=find(id); if(t && res && res.notes!=null){ t.notes=res.notes; render(); }
+      var el=$('toast'); el.innerHTML='האירוע נקבע ביומן ✓'+(res&&res.eventUrl?' <a href="'+esc(res.eventUrl)+'" target="_blank" style="color:#fff;text-decoration:underline">פתח</a>':''); el.className='toast show'; clearTimeout(toastTimer); toastTimer=setTimeout(function(){ el.className='toast'; },5000);
+    },function(e){ showOverlay(false); btn.disabled=false; toast('שגיאה: '+(e&&e.message||e),true); });
+  }
   function renderMsModal(){ var h='';
     if(!S.milestones.length) h+='<p style="color:var(--muted)">אין מיילסטונז עדיין. צור אחד למטה.</p>';
     S.milestones.forEach(function(m){ h+='<div class="m-item"><span class="dot" style="background:'+(m.color||'var(--accent)')+'"></span>'+
