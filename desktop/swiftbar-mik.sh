@@ -4,25 +4,36 @@
 # Install: symlink into your SwiftBar plugin dir as mik.1h.sh (see desktop/README / install.sh).
 source "$HOME/.mik/config" 2>/dev/null
 if [ "${1:-}" = "add" ]; then
-  # לולאה: אחרי כל "הוסף" החלון נפתח מיד למשימה הבאה, עד "סיום"/Esc או שדה ריק.
-  ADDED=0
+  # אוסף את כל המשימות מיידית (בלי רשת בין החלונות → פתיחה חלקה),
+  # ורק ב"שלח" שולח את כולן ל-webhook. כל הזנה = משימה נפרדת.
+  TASKS=()
   while true; do
-    if [ "$ADDED" -eq 0 ]; then
+    n=${#TASKS[@]}
+    if [ "$n" -eq 0 ]; then
       PROMPT="משימה חדשה  (קטגוריה - משימה):"
     else
-      PROMPT="נוספו $ADDED ✓ — הקלד משימה נוספת, או 'סיום' לסיום:"
+      PROMPT="$n בהמתנה — הקלד עוד ('הוסף'), או 'שלח' לשליחה:"
     fi
-    TASK=$(osascript -e "text returned of (display dialog \"$PROMPT\" default answer \"\" with title \"מיק ⚡\" buttons {\"סיום\",\"הוסף\"} default button \"הוסף\" cancel button \"סיום\")" 2>/dev/null) || break
-    [ -z "${TASK// /}" ] && break
-    RESP=$("$HOME/.mik/mik" "$TASK" 2>&1)
-    if echo "$RESP" | grep -q '"ok":true'; then
-      ADDED=$((ADDED + 1))
-    else
-      osascript -e "display notification \"$RESP\" with title \"מיק — שגיאה ✗\"" >/dev/null 2>&1
-    fi
+    RES=$(osascript \
+      -e "set r to display dialog \"$PROMPT\" default answer \"\" with title \"מיק ⚡\" buttons {\"שלח\",\"הוסף\"} default button \"הוסף\"" \
+      -e "return (button returned of r) & tab & (text returned of r)" 2>/dev/null) || break   # Esc → סיום ושליחה
+    BTN="${RES%%$'\t'*}"
+    TXT="${RES#*$'\t'}"
+    [ -n "${TXT// /}" ] && TASKS+=("$TXT")
+    [ "$BTN" = "שלח" ] && break
   done
-  if [ "$ADDED" -gt 0 ]; then
-    MSG="$ADDED משימות נוספו"; [ "$ADDED" -eq 1 ] && MSG="משימה אחת נוספה"
+  cnt=${#TASKS[@]}
+  if [ "$cnt" -gt 0 ]; then
+    osascript -e "display notification \"שולח $cnt…\" with title \"מיק ⚡\"" >/dev/null 2>&1
+    ok=0
+    for t in "${TASKS[@]}"; do
+      "$HOME/.mik/mik" "$t" 2>&1 | grep -q '"ok":true' && ok=$((ok + 1))
+    done
+    if [ "$ok" -eq "$cnt" ]; then
+      MSG="$cnt משימות נוספו"; [ "$cnt" -eq 1 ] && MSG="משימה אחת נוספה"
+    else
+      MSG="$ok מתוך $cnt נוספו"
+    fi
     osascript -e "display notification \"$MSG\" with title \"מיק — נוסף ✓\"" >/dev/null 2>&1
   fi
   exit 0
