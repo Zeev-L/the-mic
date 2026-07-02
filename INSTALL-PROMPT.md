@@ -19,7 +19,7 @@
 אחרי שאענה, בצע את ההתקנה:
 - אם "Claude in Chrome" מחובר ועובד — בצע דרך הדפדפן. אם הוא חסום או לא זמין (למשל ניווט לדומיינים של Google נחסם) — עבור אוטומטית ל"מסלול clasp" מהטרמינל שמתואר ב-README (התקנת clasp, login, יצירת פרויקט מקושר, push, ופריסה). בשני המקרים הכן את כל הקוד בעצמך.
 - בצע: יצירת Google Sheet + Apps Script מקושר; התקנת הקוד (Code.gs מהקובץ syncGmailToSheets.TXT + קובץ HTML בשם WebApp מהקובץ WebApp.html); סנכרון/אתחול ראשון; ושתי פריסות Web App — UI ב-"Only myself" (זו כתובת הלוח) ו-webhook ב-"Anyone, even anonymous" (הכתובת הסודית ללכידה מהדסקטופ).
-- אם בחרתי אנגלית — קבע Script Property בשם APP_LANG בערך en.
+- אם בחרתי אנגלית — קבע Script Property בשם APP_LANG בערך en, וגם קבע MIK_LANG=en בקובץ ~/.mik/config (כדי שגם קיצור הדרך בבר יהיה באנגלית).
 - אם בחרתי גם מייל — הנחה אותי ליצור תגית MyTasks ופילטר from:me to:me -{cc:me bcc:me} (Skip Inbox + Apply label). אל תחיל את הפילטר אחורנית.
 - כדי להפעיל את כפתור "🗓️ הוסף אירוע ליומן" בלוח — הנחה אותי להריץ פעם אחת בתפריט הגיליון: ניהול משימות → 📅 אשר גישה ליומן, ולאשר את הרשאת ה-Calendar.
 - לכידה מהדסקטופ (Mac/Linux בלבד): הרץ ./desktop/install.sh ומלא את ~/.mik/config בשתי הכתובות. ב-Windows דלג — אשתמש בלוח ובשורת ההוספה המהירה.
@@ -43,7 +43,7 @@ First, ask me these 4 questions and wait for my answers:
 After I answer, do the install:
 - If "Claude in Chrome" is connected and working — do it through the browser. If it's blocked or unavailable (e.g. navigation to Google domains is blocked) — automatically switch to the "clasp path" from the terminal described in the README (install clasp, login, create a bound project, push, and deploy). Either way, prepare all the code yourself.
 - Do: create a Google Sheet + bound Apps Script; install the code (Code.gs from syncGmailToSheets.TXT + an HTML file named WebApp from WebApp.html); first sync/init; and two Web App deployments — UI as "Only myself" (this is the board URL) and a webhook as "Anyone, even anonymous" (the secret URL for desktop capture).
-- If I chose English — set a Script Property named APP_LANG to en.
+- If I chose English — set a Script Property named APP_LANG to en, and also set MIK_LANG=en in ~/.mik/config (so the menu-bar quick-add is in English too).
 - If I chose email too — guide me to create a MyTasks label and a filter from:me to:me -{cc:me bcc:me} (Skip Inbox + Apply label). Do NOT apply the filter retroactively.
 - To enable the "🗓️ Add to Calendar" button in the board — guide me to run once from the sheet menu: Task Manager → 📅 Authorize Calendar, and approve the Calendar permission.
 - Desktop capture (Mac/Linux only): run ./desktop/install.sh and fill ~/.mik/config with the two URLs. On Windows, skip it — I'll use the board and the quick-add bar.
