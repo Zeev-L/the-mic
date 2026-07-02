@@ -7,21 +7,21 @@
 
 function onOpen() {
   const ui = SpreadsheetApp.getUi();
-  ui.createMenu('ניהול משימות')
-      .addItem('🔄 סנכרן מיילים (Refresh)', 'syncGmailToSheetsV2') // הותאם לשם הפונקציה
-      .addItem('🎨 כפה צביעה מחדש', 'applyColors')
+  ui.createMenu(L_('ניהול משימות', 'Task Manager'))
+      .addItem(L_('🔄 סנכרן מיילים (Refresh)', '🔄 Sync emails (Refresh)'), 'syncGmailToSheetsV2')
+      .addItem(L_('🎨 כפה צביעה מחדש', '🎨 Re-apply colors'), 'applyColors')
       .addSeparator()
-      .addItem('📧 שלח סיכום עכשיו', 'sendDailySummary')
+      .addItem(L_('📧 שלח סיכום עכשיו', '📧 Send summary now'), 'sendDailySummary')
       .addSeparator()
-      .addItem('⏰ הפעל סנכרון אוטומטי (כל שעה)', 'enableAutoSync')
-      .addItem('⏹️ בטל סנכרון אוטומטי', 'disableAutoSync')
+      .addItem(L_('⏰ הפעל סנכרון אוטומטי (כל שעה)', '⏰ Enable hourly auto-sync'), 'enableAutoSync')
+      .addItem(L_('⏹️ בטל סנכרון אוטומטי', '⏹️ Disable auto-sync'), 'disableAutoSync')
       .addSeparator()
-      .addItem('📧 הפעל סיכום יומי (08:00)', 'enableDailySummary')
-      .addItem('🔕 בטל סיכום יומי', 'disableDailySummary')
+      .addItem(L_('📧 הפעל סיכום יומי (08:00)', '📧 Enable daily summary (08:00)'), 'enableDailySummary')
+      .addItem(L_('🔕 בטל סיכום יומי', '🔕 Disable daily summary'), 'disableDailySummary')
       .addSeparator()
-      .addItem('🌐 הצג כתובת ה-Web App', 'showWebAppUrl')
+      .addItem(L_('🌐 הצג כתובת ה-Web App', '🌐 Show Web App URL'), 'showWebAppUrl')
       .addSeparator()
-      .addItem('📅 אשר גישה ליומן (פעם אחת)', 'authorizeCalendar')
+      .addItem(L_('📅 אשר גישה ליומן (פעם אחת)', '📅 Authorize Calendar (once)'), 'authorizeCalendar')
       .addToUi();
 }
 
@@ -255,11 +255,29 @@ function doGet(e) {
         '<h2>🔒 גישה נדחתה</h2><p>חסר טוקן גישה תקין בכתובת.</p></div>');
     }
   }
-  return HtmlService.createHtmlOutputFromFile('WebApp')
-    .setTitle('מיק')
+  var lang = getLang_();
+  var content = HtmlService.createHtmlOutputFromFile('WebApp').getContent()
+    .replace('<html lang="he" dir="rtl">', lang === 'en' ? '<html lang="en" dir="ltr">' : '<html lang="he" dir="rtl">')
+    .replace('%%MIK_LANG%%', lang);
+  return HtmlService.createHtmlOutput(content)
+    .setTitle(lang === 'en' ? 'Mik' : 'מיק')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
+
+/* ============================ שפה (i18n) ============================ */
+/** שפת האפליקציה: 'he' (ברירת מחדל) או 'en'. נשמר ב-Script Property APP_LANG. */
+function getLang_() {
+  return PropertiesService.getScriptProperties().getProperty('APP_LANG') === 'en' ? 'en' : 'he';
+}
+function webGetLang() { return getLang_(); }
+function webSetLang(lang) {
+  lang = (lang === 'en') ? 'en' : 'he';
+  PropertiesService.getScriptProperties().setProperty('APP_LANG', lang);
+  return lang;
+}
+/** בורר טקסט לפי שפת האפליקציה (לתפריט/מיילים בצד השרת). */
+function L_(he, en) { return getLang_() === 'en' ? en : he; }
 
 /** עוזר: מחזיר את הגיליון, גם בהקשר Web App. */
 function getSpreadsheet_() {
@@ -730,7 +748,9 @@ function syncGmailToSheetsV2() {
     
     // בדיקת עברית (חובה)
     const fullText = category + taskName;
-    if (!/[\u0590-\u05FF]/.test(fullText)) return;
+    // \u05D1\u05D3\u05D9\u05E7\u05EA \u05E9\u05E4\u05D4: \u05E2\u05D1\u05E8\u05D9\u05EA \u05D1\u05DE\u05E6\u05D1 he, \u05D0\u05D5\u05EA\u05D9\u05D5\u05EA \u05DC\u05D8\u05D9\u05E0\u05D9\u05D5\u05EA \u05D1\u05DE\u05E6\u05D1 en
+    if (getLang_() === 'en') { if (!/[A-Za-z]/.test(fullText)) return; }
+    else if (!/[\u0590-\u05FF]/.test(fullText)) return;
     
     // סינוני זבל
     if (category.includes(":") || category.toLowerCase().includes("invitation")) return;

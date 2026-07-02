@@ -3,6 +3,7 @@
 <head>
   <base target="_top">
   <meta charset="utf-8">
+  <script>window.__MIK_LANG__="%%MIK_LANG%%";</script>
   <style>
     :root {
       --bg:#f3f5f9; --surface:#ffffff; --surface-2:#eef1f6;
@@ -194,6 +195,7 @@
         <button class="btn icon-only" id="btnTheme" title="מצב כהה/בהיר">🌙</button>
         <button class="btn icon-only" id="btnDensity" title="צפיפות תצוגה (קומפקטי/נוח)">↕</button>
         <button class="btn icon-only" id="btnRefresh" title="רענן">↻</button>
+        <button class="btn icon-only" id="btnLang" title="שפה / Language">🌐</button>
       </div>
     </div>
 
@@ -293,6 +295,37 @@
   function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
   function $(id){ return document.getElementById(id); }
   function showOverlay(b){ $('overlay').classList.toggle('show',b); }
+
+  /* ---- i18n: Hebrew is the source; English is applied as an overlay ---- */
+  var LANG=(window.__MIK_LANG__==='en')?'en':'he';
+  var DICT={
+    'מיק':'Mik','＋ משימה':'+ Task','◇ מיילסטונז':'◇ Milestones','🔄 סנכרן':'🔄 Sync','📧 סיכום':'📧 Summary',
+    'מצב כהה/בהיר':'Dark / Light mode','צפיפות תצוגה (קומפקטי/נוח)':'Density (compact / comfortable)','רענן':'Refresh',
+    'הוספה מהירה:  קטגוריה - משימה   (Enter להוספה)':'Quick add:  Category - Task   (Enter to add)','תאריך יעד (לא חובה)':'Due date (optional)','＋ הוסף':'+ Add',
+    'חיפוש':'Search','חפש משימה או קטגוריה…':'Search task or category…','חפש…':'Search…','קטגוריות':'Categories','סטטוסים':'Statuses','קבץ לפי':'Group by','מיין':'Sort','הסתר שהושלמו':'Hide completed','הכל':'All','לוח':'Board','רשימה':'List',
+    'סטטוס':'Status','קטגוריה':'Category','מיילסטון':'Milestone','תאריך':'Date','עדיפות':'Priority','תאריך יעד':'Due date','שם':'Name',
+    'פתוח':'Open','בתהליך':'In progress','תלוי':'Blocked','הושלם':'Done','פתוחות':'Open','תלויות':'Blocked','באיחור':'Overdue','הושלמו':'Completed',
+    'היום':'Today','מחר':'Tomorrow','אתמול':'Yesterday','השבוע':'This week','מאוחר יותר':'Later','ללא תאריך':'No date','שבוע הבא':'Next week','יעד:':'Due:','נקה':'Clear',
+    'משימה חדשה':'New task','משימה':'Task','מה צריך לעשות?':'What needs doing?','למשל: לקוחות':'e.g. Clients','תאריך התחלה':'Start date','הערות':'Notes','הערות חופשיות…':'Free notes…','💾 הוסף':'💾 Add','ביטול':'Cancel',
+    'מיילסטונז':'Milestones','◇ ללא מיילסטון':'◇ No milestone','◇ ללא':'◇ None','אין מיילסטונז עדיין. צור אחד למטה.':'No milestones yet. Create one below.','שם מיילסטון':'Milestone name','התחלה':'Start','סיום':'End','＋ צור':'+ Create','שייך למיילסטון…':'Assign to milestone…','שנה סטטוס…':'Change status…',
+    '(ללא קטגוריה)':'(no category)','＋ הערה':'+ Note','ריק':'Empty','מחק':'Delete','בחר':'Select','פתח מייל':'Open email','הוסף אירוע ליומן':'Add to calendar','פתח':'Open',
+    'אין משימות עדיין':'No tasks yet','אין משימות שתואמות לסינון':'No tasks match the filter','אין מה להציג. הוסף תאריכי התחלה/יעד למשימות.':'Nothing to show. Add start / due dates to tasks.','לחץ "＋ משימה" או "סנכרן".':'Click "+ Task" or "Sync".',
+    '🗓️ הוסף אירוע ליומן':'🗓️ Add calendar event','כותרת האירוע':'Event title','אירוע יום שלם':'All-day event','שעת התחלה':'Start time','משך':'Duration','לוח שנה':'Calendar','טוען…':'Loading…','קבע בלוח השנה':'Add to calendar',"30 דק'":'30 min','שעה':'1 hour','שעה וחצי':'1.5 hours','שעתיים':'2 hours','(יומן ברירת המחדל)':'(default calendar)','האירוע נקבע ביומן ✓':'Event added to calendar ✓',
+    'עודכן ✓':'Updated ✓','בוטל':'Undone','סומן כהושלם ✓':'Marked done ✓','בטל':'Undo','סונכרן מ-Gmail ✓':'Synced from Gmail ✓','המשימה לא נמצאה':'Task not found','חסרה כותרת':'Missing title','בחר תאריך':'Pick a date','חסר שם':'Missing name',
+    'לא ניתן לטעון יומנים — אשר גישה ליומן מהתפריט בגיליון':'Cannot load calendars — authorize Calendar from the sheet menu'
+  };
+  var RULES=[
+    [/^בעוד (\d+) ימים$/,'in $1 days'],[/^לפני (\d+) ימים$/,'$1 days ago'],
+    [/^(\d+) נבחרו$/,'$1 selected'],[/^(\d+) עודכנו ✓$/,'$1 updated ✓'],[/^(\d+) שויכו ✓$/,'$1 assigned ✓'],
+    [/ \(ראשי\)$/,' (primary)'],[/^שגיאה: /,'Error: ']
+  ];
+  function trStr(s){ if(LANG!=='en'||s==null) return s; var k=String(s); if(DICT[k]!==undefined) return DICT[k]; var out=k; for(var i=0;i<RULES.length;i++){ out=out.replace(RULES[i][0],RULES[i][1]); } return out; }
+  function translatePage(){ if(LANG!=='en') return;
+    var w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,null,false),n;
+    while((n=w.nextNode())){ var p=n.parentNode; if(!p) continue; var tag=p.nodeName; if(tag==='SCRIPT'||tag==='STYLE'||p.isContentEditable) continue; var raw=n.nodeValue,key=raw.trim(); if(!key) continue; var tr=trStr(key); if(tr!==key) n.nodeValue=raw.replace(key,tr); }
+    var i,a; a=document.querySelectorAll('[placeholder]'); for(i=0;i<a.length;i++){ var ph=a[i].getAttribute('placeholder'),t2=trStr(ph); if(t2!==ph) a[i].setAttribute('placeholder',t2); }
+    a=document.querySelectorAll('[title]'); for(i=0;i<a.length;i++){ var ti=a[i].getAttribute('title'),t3=trStr(ti); if(t3!==ti) a[i].setAttribute('title',t3); }
+  }
   function st(k){ return STATUSES.find(x=>x.key===k)||{label:k,bg:'var(--surface-2)',fg:'var(--text)',color:'var(--muted)'}; }
   function catColor(c){ return S.colors[c]||'#cbd0db'; }
   function ms(id){ return S.milestones.find(m=>m.id===id); }
@@ -402,8 +435,8 @@
   function calBtn(t){ return '<button class="mini" title="הוסף אירוע ליומן" onclick="openCalModal(\''+encodeURIComponent(t.id)+'\')">🗓️</button>'; }
   function selBox(t){ return '<input type="checkbox" class="selbox" title="בחר" '+(S.sel.has(t.id)?'checked':'')+' onclick="onSel(event,\''+encodeURIComponent(t.id)+'\')">'; }
 
-  function render(){ renderStats(); if(!S.tasks.length && !S.doneCount){ $('content').innerHTML='<div class="empty"><div class="big">📭</div><b>אין משימות עדיין</b><p>לחץ "＋ משימה" או "סנכרן".</p></div>'; renderBulk(); return; }
-    if(S.view==='board')renderBoard(); else if(S.view==='list')renderList(); else renderRoadmap(); renderBulk(); }
+  function render(){ renderStats(); if(!S.tasks.length && !S.doneCount){ $('content').innerHTML='<div class="empty"><div class="big">📭</div><b>אין משימות עדיין</b><p>לחץ "＋ משימה" או "סנכרן".</p></div>'; renderBulk(); translatePage(); return; }
+    if(S.view==='board')renderBoard(); else if(S.view==='list')renderList(); else renderRoadmap(); renderBulk(); translatePage(); }
 
   function cardHtml(t){ return '<div class="card'+(t.status==='DONE'?' done':'')+(S.sel.has(t.id)?' sel':'')+'" draggable="true" data-id="'+esc(t.id)+'" style="--cat:'+catColor(t.category)+'">'+
       selBox(t)+'<div class="ctop">'+ctlPri(t)+elCat(t)+'</div>'+elName(t)+elNote(t)+
@@ -552,7 +585,7 @@
       if(nt && (start||mid)){ var f={}; if(start)f.start=start; if(mid)f.milestoneId=mid; if(start)nt.start=start; if(mid)nt.milestoneId=mid; srun('webUpdateTask',[nt.id,f],after); } else after(); }); }
 
   /* ---- milestones modal ---- */
-  function openMsModal(){ renderMsModal(); $('msModalBg').classList.add('show'); }
+  function openMsModal(){ renderMsModal(); $('msModalBg').classList.add('show'); translatePage(); }
   function closeMsModal(){ $('msModalBg').classList.remove('show'); }
 
   /* ---- calendar event modal ---- */
@@ -568,10 +601,10 @@
     else { sel.innerHTML='<option>טוען…</option>';
       srun('webListCalendars',[],function(list){ calCals=list||[]; fillCalOptions(sel); },
         function(e){ calCals=null; sel.innerHTML='<option value="">(יומן ברירת המחדל)</option>'; toast('לא ניתן לטעון יומנים — אשר גישה ליומן מהתפריט בגיליון',true); }); }
-    $('calModalBg').classList.add('show');
+    $('calModalBg').classList.add('show'); translatePage();
   }
   function fillCalOptions(sel){ if(!calCals||!calCals.length){ sel.innerHTML='<option value="">(יומן ברירת המחדל)</option>'; return; }
-    sel.innerHTML=calCals.map(function(c){ return '<option value="'+esc(c.id)+'"'+(c.primary?' selected':'')+'>'+esc(c.name)+(c.primary?' (ראשי)':'')+'</option>'; }).join(''); }
+    sel.innerHTML=calCals.map(function(c){ return '<option value="'+esc(c.id)+'"'+(c.primary?' selected':'')+'>'+esc(c.name)+(c.primary?' (ראשי)':'')+'</option>'; }).join(''); translatePage(); }
   function calToggleAllDay(){ $('calTimeRow').style.display=$('calAllDay').checked?'none':'flex'; }
   function closeCalModal(){ $('calModalBg').classList.remove('show'); }
   function submitCalEvent(){ var btn=$('calSubmit'), id=btn.dataset.tid;
@@ -581,7 +614,7 @@
     btn.disabled=true; showOverlay(true);
     srun('webCreateCalendarEvent',[payload],function(res){ showOverlay(false); closeCalModal();
       var t=find(id); if(t && res && res.notes!=null){ t.notes=res.notes; render(); }
-      var el=$('toast'); el.innerHTML='האירוע נקבע ביומן ✓'+(res&&res.eventUrl?' <a href="'+esc(res.eventUrl)+'" target="_blank" style="color:#fff;text-decoration:underline">פתח</a>':''); el.className='toast show'; clearTimeout(toastTimer); toastTimer=setTimeout(function(){ el.className='toast'; },5000);
+      var el=$('toast'); el.innerHTML='האירוע נקבע ביומן ✓'+(res&&res.eventUrl?' <a href="'+esc(res.eventUrl)+'" target="_blank" style="color:#fff;text-decoration:underline">פתח</a>':''); el.className='toast show'; translatePage(); clearTimeout(toastTimer); toastTimer=setTimeout(function(){ el.className='toast'; },5000);
     },function(e){ showOverlay(false); btn.disabled=false; toast('שגיאה: '+(e&&e.message||e),true); });
   }
   function renderMsModal(){ var h='';
@@ -599,8 +632,8 @@
 
   /* ---- toast ---- */
   var toastTimer=null;
-  function toast(msg,err){ var t=$('toast'); t.innerHTML=esc(msg); t.className='toast show'+(err?' err':''); clearTimeout(toastTimer); toastTimer=setTimeout(()=>{t.className='toast';},2600); }
-  function toastUndo(msg,onUndo){ var t=$('toast'); t.innerHTML=esc(msg)+' <button id="undoBtn">בטל</button>'; t.className='toast show'; clearTimeout(toastTimer); $('undoBtn').addEventListener('click',function(){ clearTimeout(toastTimer); t.className='toast'; onUndo(); }); toastTimer=setTimeout(()=>{t.className='toast';},5000); }
+  function toast(msg,err){ var t=$('toast'); t.innerHTML=esc(msg); t.className='toast show'+(err?' err':''); translatePage(); clearTimeout(toastTimer); toastTimer=setTimeout(()=>{t.className='toast';},2600); }
+  function toastUndo(msg,onUndo){ var t=$('toast'); t.innerHTML=esc(msg)+' <button id="undoBtn">בטל</button>'; t.className='toast show'; translatePage(); clearTimeout(toastTimer); $('undoBtn').addEventListener('click',function(){ clearTimeout(toastTimer); t.className='toast'; onUndo(); }); toastTimer=setTimeout(()=>{t.className='toast';},5000); }
 
   /* ---- top actions ---- */
   function syncNow(){ showOverlay(true); $('btnSync').disabled=true; srun('webRunSync',[],function(res){ S.tasks=res.tasks||[]; S.colors=res.colors||{}; S.doneCount=res.doneCount||0; S.doneLoaded=false; buildFilters(); render(); showOverlay(false); $('btnSync').disabled=false; toast('סונכרן מ-Gmail ✓'); },function(e){ showOverlay(false); $('btnSync').disabled=false; toast('שגיאה: '+e.message,true); }); }
@@ -621,6 +654,7 @@
   $('btnSync').addEventListener('click',syncNow);
   $('btnSummary').addEventListener('click',sendSummary);
   $('btnRefresh').addEventListener('click',function(){ load(); });
+  $('btnLang').addEventListener('click',function(){ var nl=LANG==='en'?'he':'en'; showOverlay(true); srun('webSetLang',[nl],function(){ location.reload(); }); });
   $('btnTheme').addEventListener('click',function(){ S.theme=S.theme==='dark'?'light':'dark'; applyPrefs(); savePrefs(); });
   $('btnDensity').addEventListener('click',function(){ S.density=S.density==='compact'?'comfortable':'compact'; applyPrefs(); savePrefs(); });
   $('pSave').addEventListener('click',savePanel); $('pCancel').addEventListener('click',closePanel); $('pClose').addEventListener('click',closePanel); $('scrim').addEventListener('click',closePanel);
@@ -630,7 +664,7 @@
     if(e.key==='Escape'){ if($('panel').classList.contains('show'))closePanel(); else if($('msModalBg').classList.contains('show'))closeMsModal(); else if(S.sel.size){ S.sel.clear(); render(); } return; }
     if(typing)return; if(e.key==='/'){ e.preventDefault(); $('search').focus(); } else if(e.key.toLowerCase()==='c'){ e.preventDefault(); $('qaInput').focus(); } });
 
-  loadPrefs(); applyPrefs(); load(true);
+  loadPrefs(); applyPrefs(); translatePage(); load(true);
 </script>
 </body>
 </html>
