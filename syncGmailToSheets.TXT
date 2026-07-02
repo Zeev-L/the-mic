@@ -384,12 +384,33 @@ function webBulkUpdateStatus(taskIds, newStatus) {
  * הוספת משימה חדשה ידנית מתוך ה-Web App (לא ממייל).
  * נכתבת בראש הטבלה, בלי Thread ID.
  */
+/**
+ * מחזיר את גיליון "משימות", ויוצר+מעצב אותו אם עדיין לא קיים.
+ * מאפשר הזנה ישירה (＋ בלוח / webhook) בלי תלות במייל או בסנכרון.
+ */
+function ensureTasksSheet_(ss) {
+  ss = ss || getSpreadsheet_();
+  var sheet = ss.getSheetByName('משימות');
+  if (sheet) return sheet;
+  sheet = ss.insertSheet('משימות');
+  var headers = ["Task ID", "קטגוריה", "משימה", "סטטוס", "דחיפות", "תאריך יעד", "הערות", "Thread ID", "תאריך התחלה", "Milestone ID"];
+  sheet.getRange(1, 1, 1, headers.length)
+       .setValues([headers]).setFontWeight('bold').setBackground('#e0e0e0')
+       .setBorder(true, true, true, true, true, true);
+  sheet.setFrozenRows(1);
+  sheet.hideColumns(1); sheet.hideColumns(8); sheet.hideColumns(10);
+  var maxRows = Math.max(sheet.getMaxRows(), 100);
+  var rule = SpreadsheetApp.newDataValidation().requireValueInList(['OPEN', 'IN PROGRESS', 'DEPENDENT', 'DONE'], true).build();
+  sheet.getRange(2, 4, maxRows - 1, 1).setDataValidation(rule);
+  return sheet;
+}
+
 function webAddTask(category, task, priority, due, notes) {
   category = String(category || '').trim();
   task = String(task || '').trim();
   if (!task) throw new Error('חסר שם משימה.');
   const ss = getSpreadsheet_();
-  const sheet = ss.getSheetByName('משימות');
+  const sheet = ensureTasksSheet_(ss);  // יוצר את מבנה הגיליון אם עדיין לא קיים — הזנה ישירה בלי מייל
 
   // מזהה ייחודי — אם כבר קיים, מוסיפים סיומת קצרה.
   let taskId = category ? (category + ' - ' + task) : task;
