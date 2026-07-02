@@ -6,3 +6,6 @@ MIK_URL="PASTE_YOUR_ANYONE_WEBHOOK_EXEC_URL_HERE"
 
 # Your main web-app /exec URL (used by the 'פתח את מיק' menu item):
 MIK_APP_URL="PASTE_YOUR_MAIN_WEBAPP_EXEC_URL_HERE"
+
+# Bar language: he (default) or en — should match the app's language (APP_LANG).
+MIK_LANG="he"
