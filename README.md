@@ -93,7 +93,61 @@
 | 9 | לכידה מהדסקטופ **(Mac/Linux בלבד, אופציונלי)**: `./desktop/install.sh` + מילוי `~/.mik/config` בכתובות מצעדים 6–7. ב-Windows — דלג; השתמש ב-Web App ובשורת ההוספה המהירה | 🤖 |
 
 > ⚠️ **רק צעד 4 (OAuth) ואישורי-קליק קצרים דורשים אותך** — Claude לא מאשר הרשאות בשם חשבון Google שלך. כל השאר אוטומטי כשהדפדפן מחובר.
-> 💡 אם אין Claude-in-Chrome — בצע ידנית לפי "התקנה (פעם אחת)" למעלה + הסעיפים הבאים; Claude עדיין יכול לכתוב/לעדכן קוד ולהכין הכל.
+> 💡 אם אין Claude-in-Chrome — **או אם התוסף חסום** (קורה; ראה "מסלול clasp" למטה) — בצע ידנית לפי "התקנה (פעם אחת)" למעלה, או דרך clasp; Claude עדיין יכול לכתוב/לעדכן קוד ולהכין הכל.
+
+---
+
+## 🧰 מסלול חלופי: הקמה דרך `clasp` (טרמינל) — כשמסלול הדפדפן חסום
+
+**מתי צריך את זה:** לפעמים התוסף **Claude in Chrome** נכנס למצב שבו הוא שולט רק ב-origin **אחד** שכבר טעון, וחוסם ניווט/פעולה על כל דומיין אחר — כולל `docs.google.com`, `script.google.com` ו-`mail.google.com` — עם השגיאה `Navigation to this domain is not allowed`. זה קורה **גם** כשהרשאת Chrome היא "On all sites", **וגם** אחרי אתחול התוסף — כי ההגבלה היא פר-origin ומאוחסנת.
+
+> **בדיקה מהירה (10 שניות):** בקש מ-Claude לנווט ל-`example.com`. אם *גם* זה חסום — זו החסימה הגלובלית פר-origin, לא בעיה ספציפית ל-Google. אל תבזבז זמן על אבחון — עבור ישר ל-clasp.
+
+**היתרון:** `clasp` (הכלי הרשמי של Google ל-Apps Script) מקים את כל צד-הקוד מהטרמינל — בלי להדביק ~95KB קוד לעורך, ובלי תלות בדפדפן. רק ה-OAuth וכמה קליקים ב-Gmail/Sheet דורשים אותך.
+
+```bash
+# 1) התקנה + התחברות (בחר את חשבון Google הנכון בדפדפן שנפתח)
+npm install -g @google/clasp
+clasp login                       # השתמש בזרימת ה-localhost הרגילה (לא --no-localhost)
+
+# 2) הדלק את ה-Apps Script API (פעם אחת):
+#    https://script.google.com/home/usersettings  →  הדלק את המתג
+
+# 3) פרויקט Apps Script מקושר לגיליון חדש בשם "מיק"
+mkdir mik-clasp && cd mik-clasp
+clasp create --type sheets --title "מיק"
+
+# 4) הכנס את הקוד (מהריפו הזה) + ערוך את המניפסט
+cp /path/to/the-mic/syncGmailToSheets.TXT ./Code.js
+cp /path/to/the-mic/WebApp.html          ./WebApp.html
+#   ב-appsscript.json: קבע timeZone (למשל "Asia/Jerusalem") והוסף בלוק "webapp" (ראה למטה)
+clasp push -f
+```
+
+**פריסת שתי ה-Web Apps — הטריק החשוב:** clasp לוקח את הגדרת הגישה מ-`appsscript.json`, וכל `clasp deploy` "מצלם" גרסה נעולה. לכן כדי לקבל **שתי גישות שונות**, ערוך את `webapp.access` **בין** הפריסות:
+
+```jsonc
+// webhook (הסוד MIK_URL): חייב ANYONE_ANONYMOUS — כי סקריפט mik שולח curl בלי אימות
+"webapp": { "executeAs": "USER_DEPLOYING", "access": "ANYONE_ANONYMOUS" }
+```
+```bash
+clasp push -f && clasp deploy -d "mik webhook"     # → זו כתובת ה-MIK_URL
+#   עכשיו שנה במניפסט ל:  "access": "MYSELF"
+clasp push -f && clasp deploy -d "mik UI"          # → זו כתובת ה-MIK_APP_URL
+```
+כתובת ה-`/exec` לכל פריסה נבנית כך: `https://script.google.com/macros/s/<DEPLOYMENT_ID>/exec`.
+
+**אישור + אימות:** פתח את הגיליון החדש → **ניהול משימות → 🔄 סנכרן מיילים** → אשר OAuth. זה **הכרחי** — ה-webhook רץ בהרשאות המשתמש שפרס, ולא יעבוד עד שתאשר פעם אחת. אימות מהיר של ה-webhook:
+```bash
+curl -s --data-urlencode "task=בדיקה - התקנה" "<MIK_URL>"    # ציפייה: {"ok":true,...}
+```
+משם ממשיכים רגיל: תגית + פילטר ב-Gmail (למטה), ו-`desktop/install.sh`.
+
+> 🧭 **גוצ'ות שנתקלנו בהן:**
+> - `clasp create` נכשל עם *"User has not enabled the Apps Script API"* → הדלק ב-usersettings וחכה ~דקה להתפשטות.
+> - `clasp login --no-localhost` דורש הדבקת קוד ידנית בטרמינל (לא מתאים להרצה ברקע) → השתמש ב-`clasp login` הרגיל; שרת ה-localhost תופס את הקוד לבד.
+> - **אל תחיל את פילטר ה-Gmail אחורנית** ("apply to matching conversations") — זה יסחף כל מייל-לעצמך היסטורי לתוך הלוח כמשימות.
+> - הגיליון הריק שנוצר בטעות (אם ניסית קודם דרך הדפדפן) — אפשר למחוק ידנית; clasp יוצר גיליון משלו.
 
 ---
 
@@ -240,6 +294,15 @@
    הוא מעתיק את `mik` + תוסף ה-SwiftBar ל-`~/.mik/`, יוצר `~/.mik/config` (chmod 600), מוסיף alias `mik` ל-`~/.zshrc`, ואם SwiftBar מותקן — מקשר את התוסף.
 3. **ערוך את `~/.mik/config`** והדבק את כתובת ה-webhook (`MIK_URL`) ואת כתובת ה-UI הראשי (`MIK_APP_URL`).
 4. אם השתמשת ב-SwiftBar — **אתחל אותו** (יצא ופתח מחדש) כדי שיסרוק את התוסף החדש. ⚡ יופיע בשורת התפריטים.
+
+> 💡 **אין SwiftBar?** התקן: `brew install --cask swiftbar`. כדי לחסוך בחירת תיקייה ידנית, הגדר מראש את תיקיית התוספים וקשר את התוסף:
+> ```bash
+> defaults write com.ameba.SwiftBar PluginDirectory "$HOME/.mik/swiftbar-plugins"
+> mkdir -p "$HOME/.mik/swiftbar-plugins"
+> ln -sf "$HOME/.mik/swiftbar-mik.sh" "$HOME/.mik/swiftbar-plugins/mik.1h.sh"   # הסיומת .1h.sh חובה
+> open -a SwiftBar
+> ```
+> בפעם הראשונה שתוסיף משימה, macOS יבקש אישור **התראות** ל-SwiftBar — אשר.
 
 ### שימוש
 - **טרמינל:** `mik "לקוחות - לחזור לדני"` (פתח טרמינל חדש אחרי ההתקנה לטעינת ה-alias).
