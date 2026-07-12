@@ -10,9 +10,9 @@ SELF="$HOME/.mik/swiftbar-mik.sh"
 HIDDEN="$HOME/.mik/.today_hidden"
 
 # ---- toggle: hide / show the today list ----
+# מחליף את הדגל וממשיך לרינדור (בלי exit) כדי שהאייקון יתעדכן מיד ולא יהבהב ריק.
 if [ "${1:-}" = "toggle" ]; then
   if [ -f "$HIDDEN" ]; then rm -f "$HIDDEN"; else touch "$HIDDEN"; fi
-  exit 0
 fi
 
 # ---- action: update a task from the "today" submenu (mark status / change due) ----
