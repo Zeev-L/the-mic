@@ -7,13 +7,6 @@ MIK_LANG="${MIK_LANG:-he}"                       # שפת הבר: he (ברירת
 L(){ if [ "$MIK_LANG" = "en" ]; then printf '%s' "$2"; else printf '%s' "$1"; fi; }
 TITLE=$(L "מיק ⚡" "Mik ⚡")
 SELF="$HOME/.mik/swiftbar-mik.sh"
-HIDDEN="$HOME/.mik/.today_hidden"
-
-# ---- toggle: hide / show the today list ----
-# מחליף את הדגל וממשיך לרינדור (בלי exit) כדי שהאייקון יתעדכן מיד ולא יהבהב ריק.
-if [ "${1:-}" = "toggle" ]; then
-  if [ -f "$HIDDEN" ]; then rm -f "$HIDDEN"; else touch "$HIDDEN"; fi
-fi
 
 # ---- action: update a task from the "today" submenu (mark status / change due) ----
 if [ "${1:-}" = "action" ]; then
@@ -74,20 +67,13 @@ if [ "${1:-}" = "add" ]; then
   exit 0
 fi
 
-# ---- default: render menu — today's tasks (read endpoint) + quick actions ----
-if [ -f "$HIDDEN" ]; then
-  echo "⚡"
-  echo "---"
-  echo "$(L "👁 הצג משימות היום" "👁 Show today") | bash=\"$SELF\" param1=toggle terminal=false refresh=true"
+# ---- default: render menu — today's tasks (nested submenu) + quick actions ----
+JSON=""
+[ -n "${MIK_URL:-}" ] && JSON=$(curl -s -L --max-time 12 "${MIK_URL}?json=agenda" 2>/dev/null)
+if command -v python3 >/dev/null 2>&1 && [ -n "$JSON" ]; then
+  printf '%s' "$JSON" | python3 "$HOME/.mik/mik-agenda.py" "$SELF" "$MIK_LANG"
 else
-  JSON=""
-  [ -n "${MIK_URL:-}" ] && JSON=$(curl -s -L --max-time 12 "${MIK_URL}?json=agenda" 2>/dev/null)
-  if command -v python3 >/dev/null 2>&1 && [ -n "$JSON" ]; then
-    printf '%s' "$JSON" | python3 "$HOME/.mik/mik-agenda.py" "$SELF" "$MIK_LANG"
-  else
-    echo "⚡"
-  fi
-  echo "🙈 $(L "הסתר משימות היום" "Hide today") | bash=\"$SELF\" param1=toggle terminal=false refresh=true"
+  echo "⚡"
 fi
 echo "---"
 echo "$(L "＋ הוסף משימות" "＋ Add tasks") | bash=\"$SELF\" param1=add terminal=false refresh=false"
