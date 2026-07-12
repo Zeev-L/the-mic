@@ -144,6 +144,26 @@
 
     .scrim{ position:fixed; inset:0; background:rgba(16,24,40,.45); opacity:0; pointer-events:none; transition:opacity .2s; z-index:55; } .scrim.show{ opacity:1; pointer-events:auto; }
     .panel{ position:fixed; top:0; inset-inline-start:0; height:100%; width:430px; max-width:92vw; background:var(--surface); box-shadow:var(--shadow-panel); transform:translateX(105%); transition:transform .25s cubic-bezier(.4,0,.2,1); z-index:60; display:flex; flex-direction:column; }
+    /* agenda sidebar */
+    .agenda{ position:fixed; top:0; inset-inline-end:0; height:100%; width:400px; max-width:90vw; background:var(--surface); box-shadow:16px 0 48px rgba(16,24,40,.20); transform:translateX(-105%); transition:transform .25s cubic-bezier(.4,0,.2,1); z-index:60; display:flex; flex-direction:column; }
+    .agenda.show{ transform:translateX(0); }
+    .ag-head{ padding:20px 22px 14px; display:flex; align-items:flex-start; justify-content:space-between; border-bottom:1px solid var(--border); }
+    .ag-head h3{ font-size:23px; margin:0; }
+    .ag-date{ font-size:13px; color:var(--muted); font-weight:600; margin-top:3px; }
+    .ag-slices{ display:flex; flex-wrap:wrap; gap:8px; padding:14px 20px; border-bottom:1px solid var(--border); }
+    .ag-slices button{ border:1px solid var(--border); background:var(--surface); color:var(--text); border-radius:100px; padding:7px 15px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; transition:all .12s; }
+    .ag-slices button:hover{ background:var(--surface-2); }
+    .ag-slices button.on{ background:var(--accent); color:#fff; border-color:var(--accent); }
+    .ag-body{ flex:1; overflow:auto; padding:14px 16px 24px; display:flex; flex-direction:column; gap:10px; }
+    .ag-row{ display:flex; align-items:center; gap:12px; background:var(--surface-2); border-radius:12px; padding:12px 14px; border-inline-start:5px solid var(--cat); }
+    .ag-check{ width:24px; height:24px; border-radius:50%; border:2px solid var(--border-2); background:transparent; cursor:pointer; flex:none; transition:all .15s; }
+    .ag-check:hover{ border-color:var(--done); background:var(--done-bg); }
+    .ag-main{ flex:1; min-width:0; }
+    .ag-task{ font-size:16px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .ag-meta{ font-size:12.5px; color:var(--muted); font-weight:600; margin-top:2px; }
+    .ag-st{ font-size:11px; font-weight:800; padding:4px 10px; border-radius:100px; flex:none; white-space:nowrap; }
+    .ag-empty{ text-align:center; color:var(--muted); padding:44px 12px; font-size:15px; }
+    @media (max-width:760px){ .agenda{ width:100%; max-width:100%; } }
     .panel.show{ transform:translateX(0)!important; }
     .panel h3{ margin:0; padding:18px 20px; border-bottom:1px solid var(--border); font-size:17px; display:flex; justify-content:space-between; align-items:center; }
     .panel .body{ padding:18px 20px; overflow:auto; flex:1; display:flex; flex-direction:column; gap:15px; }
@@ -196,6 +216,7 @@
         <button class="btn icon-only" id="btnDensity" title="צפיפות תצוגה (קומפקטי/נוח)">↕</button>
         <button class="btn icon-only" id="btnRefresh" title="רענן">↻</button>
         <button class="btn icon-only" id="btnLang" title="שפה / Language">🌐</button>
+        <button class="btn icon-only" id="btnAgenda" title="המשימות של היום">🗓️</button>
       </div>
     </div>
 
@@ -245,6 +266,24 @@
     </div>
     <div class="foot"><button class="btn primary" id="pSave">💾 הוסף</button><button class="btn" id="pCancel">ביטול</button></div>
   </div>
+
+  <!-- Agenda sidebar -->
+  <div class="scrim" id="agScrim"></div>
+  <aside class="agenda" id="agenda">
+    <div class="ag-head">
+      <div><h3 id="agTitle">היום</h3><div class="ag-date" id="agDate"></div></div>
+      <span class="mini" id="agClose" style="cursor:pointer">✕</span>
+    </div>
+    <div class="ag-slices" id="agSlices">
+      <button data-slice="today" class="on">היום</button>
+      <button data-slice="overdue">באיחור</button>
+      <button data-slice="tomorrow">מחר</button>
+      <button data-slice="week">השבוע</button>
+      <button data-slice="nodate">ללא תאריך</button>
+      <button data-slice="all">הכל</button>
+    </div>
+    <div class="ag-body" id="agBody"></div>
+  </aside>
 
   <!-- Milestones modal -->
   <div class="modal-bg" id="msModalBg">
@@ -302,7 +341,7 @@
     'מיק':'Mik','＋ משימה':'+ Task','◇ מיילסטונז':'◇ Milestones','🔄 סנכרן':'🔄 Sync','📧 סיכום':'📧 Summary',
     'מצב כהה/בהיר':'Dark / Light mode','צפיפות תצוגה (קומפקטי/נוח)':'Density (compact / comfortable)','רענן':'Refresh',
     'הוספה מהירה:  קטגוריה - משימה   (Enter להוספה)':'Quick add:  Category - Task   (Enter to add)','תאריך יעד (לא חובה)':'Due date (optional)','＋ הוסף':'+ Add',
-    'חיפוש':'Search','חפש משימה או קטגוריה…':'Search task or category…','חפש…':'Search…','קטגוריות':'Categories','סטטוסים':'Statuses','קבץ לפי':'Group by','מיין':'Sort','הסתר שהושלמו':'Hide completed','הכל':'All','לוח':'Board','רשימה':'List',
+    'חיפוש':'Search','חפש משימה או קטגוריה…':'Search task or category…','חפש…':'Search…','קטגוריות':'Categories','סטטוסים':'Statuses','קבץ לפי':'Group by','מיין':'Sort','הסתר שהושלמו':'Hide completed','הכל':'All','כל הפתוחות':'All open','סמן כבוצע':'Mark done','המשימות של היום':"Today's tasks",'אין משימות כאן 🎉':'No tasks here 🎉','לוח':'Board','רשימה':'List',
     'סטטוס':'Status','קטגוריה':'Category','מיילסטון':'Milestone','תאריך':'Date','עדיפות':'Priority','תאריך יעד':'Due date','שם':'Name',
     'פתוח':'Open','בתהליך':'In progress','תלוי':'Blocked','הושלם':'Done','פתוחות':'Open','תלויות':'Blocked','באיחור':'Overdue','הושלמו':'Completed',
     'היום':'Today','מחר':'Tomorrow','אתמול':'Yesterday','השבוע':'This week','מאוחר יותר':'Later','ללא תאריך':'No date','שבוע הבא':'Next week','יעד:':'Due:','נקה':'Clear',
@@ -588,6 +627,38 @@
   function openMsModal(){ renderMsModal(); $('msModalBg').classList.add('show'); translatePage(); }
   function closeMsModal(){ $('msModalBg').classList.remove('show'); }
 
+  /* ---- agenda sidebar (today + custom slices) ---- */
+  var AG_SLICE='today';
+  function agListFor(sl){
+    var t=todayISO(), tm=addDaysISO(t,1), wk=addDaysISO(t,7);
+    var open=S.tasks.filter(function(x){ return x.status!=='DONE'; });
+    if(sl==='today') return open.filter(function(x){ return x.due===t; });
+    if(sl==='overdue') return open.filter(function(x){ return isISO(x.due)&&x.due<t; });
+    if(sl==='tomorrow') return open.filter(function(x){ return x.due===tm; });
+    if(sl==='week') return open.filter(function(x){ return isISO(x.due)&&x.due>=t&&x.due<=wk; });
+    if(sl==='nodate') return open.filter(function(x){ return !isISO(x.due); });
+    return open;
+  }
+  function agRowHtml(task){ var s=st(task.status), enc=encodeURIComponent(task.id);
+    return '<div class="ag-row" style="--cat:'+catColor(task.category)+'">'+
+      '<button class="ag-check" title="סמן כבוצע" onclick="agDone(\''+enc+'\')"></button>'+
+      '<div class="ag-main"><div class="ag-task">'+esc(task.task)+'</div><div class="ag-meta">'+esc(task.category||'—')+(isISO(task.due)?' · '+esc(relDate(task.due)):'')+'</div></div>'+
+      '<span class="ag-st" style="background:'+s.bg+';color:'+s.fg+'">'+esc(s.label)+'</span></div>';
+  }
+  function renderAgenda(){
+    var titles={today:'היום',overdue:'באיחור',tomorrow:'מחר',week:'השבוע',nodate:'ללא תאריך',all:'כל הפתוחות'};
+    $('agTitle').textContent=titles[AG_SLICE]||'היום';
+    try{ $('agDate').textContent=new Date(todayISO()+'T00:00:00').toLocaleDateString(LANG==='en'?'en-US':'he-IL',{weekday:'long',day:'numeric',month:'long'}); }catch(e){ $('agDate').textContent=''; }
+    Array.prototype.forEach.call($('agSlices').children,function(b){ b.classList.toggle('on', b.getAttribute('data-slice')===AG_SLICE); });
+    var items=sortTasks(agListFor(AG_SLICE));
+    $('agBody').innerHTML= items.length ? items.map(agRowHtml).join('') : '<div class="ag-empty">אין משימות כאן 🎉</div>';
+    if(typeof translatePage==='function') translatePage();
+  }
+  function openAgenda(){ renderAgenda(); $('agenda').classList.add('show'); $('agScrim').classList.add('show'); }
+  function closeAgenda(){ $('agenda').classList.remove('show'); $('agScrim').classList.remove('show'); }
+  function toggleAgenda(){ $('agenda').classList.contains('show') ? closeAgenda() : openAgenda(); }
+  window.agDone=function(enc){ changeStatus(decodeURIComponent(enc),'DONE'); renderAgenda(); };
+
   /* ---- calendar event modal ---- */
   var calCals=null;
   function calToday(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
@@ -655,13 +726,17 @@
   $('btnSummary').addEventListener('click',sendSummary);
   $('btnRefresh').addEventListener('click',function(){ load(); });
   $('btnLang').addEventListener('click',function(){ var nl=LANG==='en'?'he':'en'; showOverlay(true); srun('webSetLang',[nl],function(){ location.reload(); }); });
+  $('btnAgenda').addEventListener('click',toggleAgenda);
+  $('agClose').addEventListener('click',closeAgenda);
+  $('agScrim').addEventListener('click',closeAgenda);
+  Array.prototype.forEach.call($('agSlices').children,function(b){ b.addEventListener('click',function(){ AG_SLICE=b.getAttribute('data-slice'); renderAgenda(); }); });
   $('btnTheme').addEventListener('click',function(){ S.theme=S.theme==='dark'?'light':'dark'; applyPrefs(); savePrefs(); });
   $('btnDensity').addEventListener('click',function(){ S.density=S.density==='compact'?'comfortable':'compact'; applyPrefs(); savePrefs(); });
   $('pSave').addEventListener('click',savePanel); $('pCancel').addEventListener('click',closePanel); $('pClose').addEventListener('click',closePanel); $('scrim').addEventListener('click',closePanel);
   $('msModalClose').addEventListener('click',closeMsModal); $('msModalBg').addEventListener('click',function(e){ if(e.target===$('msModalBg'))closeMsModal(); });
   document.querySelectorAll('#pDueChips button').forEach(function(b){ b.addEventListener('click',function(){ var d=parseInt(b.dataset.d,10); $('pDue').value=d<0?'':addDaysISO(todayISO(),d); }); });
   document.addEventListener('keydown',function(e){ var typing=/INPUT|TEXTAREA|SELECT/.test(e.target.tagName||'')||e.target.isContentEditable;
-    if(e.key==='Escape'){ if($('panel').classList.contains('show'))closePanel(); else if($('msModalBg').classList.contains('show'))closeMsModal(); else if(S.sel.size){ S.sel.clear(); render(); } return; }
+    if(e.key==='Escape'){ if($('agenda').classList.contains('show'))closeAgenda(); else if($('panel').classList.contains('show'))closePanel(); else if($('msModalBg').classList.contains('show'))closeMsModal(); else if(S.sel.size){ S.sel.clear(); render(); } return; }
     if(typing)return; if(e.key==='/'){ e.preventDefault(); $('search').focus(); } else if(e.key.toLowerCase()==='c'){ e.preventDefault(); $('qaInput').focus(); } });
 
   loadPrefs(); applyPrefs(); translatePage(); load(true);
