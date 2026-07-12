@@ -257,6 +257,8 @@ function doGet(e) {
         '<h2>🔒 גישה נדחתה</h2><p>חסר טוקן גישה תקין בכתובת.</p></div>');
     }
   }
+  // agenda JSON (לתוסף שורת התפריטים) — מחזיר רק את משימות היום + באיחור
+  if (e && e.parameter && e.parameter.json === 'agenda') return agendaJson_();
   var lang = getLang_();
   var content = HtmlService.createHtmlOutputFromFile('WebApp').getContent()
     .replace('<html lang="he" dir="rtl">', lang === 'en' ? '<html lang="en" dir="ltr">' : '<html lang="he" dir="rtl">')
@@ -265,6 +267,33 @@ function doGet(e) {
     .setTitle(lang === 'en' ? 'Mik' : 'מיק')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1')
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+/** JSON של משימות היום + באיחור (לתוסף שורת התפריטים). מחזיר מינימום מידע. */
+function agendaJson_() {
+  function out(o){ return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }
+  try {
+    var ss = getSpreadsheet_(); var sheet = ss.getSheetByName('משימות');
+    var tz = Session.getScriptTimeZone();
+    var today = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd');
+    var tasks = [];
+    if (sheet && sheet.getLastRow() > 1) {
+      var data = sheet.getRange(2, 1, sheet.getLastRow() - 1, 10).getValues();
+      data.forEach(function(r){
+        var status = String(r[3] || 'OPEN').toUpperCase().trim();
+        if (status === 'DONE') return;
+        var due = dateToStr_(r[5], tz);
+        var overdue = /^\d{4}-\d{2}-\d{2}$/.test(due) && due < today;
+        if (due === today || overdue) {
+          tasks.push({ id: String(r[0]), category: String(r[1] || ''), task: String(r[2] || ''), status: status, due: due, overdue: overdue });
+        }
+      });
+    }
+    tasks.sort(function(a,b){ if (a.overdue !== b.overdue) return a.overdue ? -1 : 1; return 0; });
+    return out({ ok:true, date: today, lang: getLang_(), tasks: tasks });
+  } catch (err) {
+    return out({ ok:false, error: String(err) });
+  }
 }
 
 /* ============================ שפה (i18n) ============================ */
@@ -942,7 +971,22 @@ function doPost(e) {
   function out(obj){ return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON); }
   try {
     var p = (e && e.parameter) || {};
-    // secret-URL model: the deployment is "Anyone" but the long random /exec URL is the secret (Slack-style). add-only.
+    // secret-URL model: the deployment is "Anyone" but the long random /exec URL is the secret (Slack-style).
+
+    // פעולות עדכון (מתוסף שורת התפריטים): סימון סטטוס / שינוי תאריך למשימה קיימת.
+    var action = String(p.action || '').trim();
+    if (action === 'setstatus') {
+      if (!p.id) return out({ ok:false, error:'missing id' });
+      var ns = String(p.status || '').toUpperCase().trim();
+      if (['OPEN','IN PROGRESS','DEPENDENT','DONE'].indexOf(ns) < 0) return out({ ok:false, error:'bad status' });
+      webUpdateStatus(String(p.id), ns);
+      return out({ ok:true, id:String(p.id), status:ns });
+    }
+    if (action === 'setdue') {
+      if (!p.id) return out({ ok:false, error:'missing id' });
+      webUpdateField(String(p.id), 'due', String(p.due || ''));
+      return out({ ok:true, id:String(p.id), due:String(p.due || '') });
+    }
 
     var raw = String(p.task || '').trim();
     if (!raw) return out({ ok:false, error:'empty task' });
