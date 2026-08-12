@@ -503,7 +503,7 @@
       html+='<div class="list-sec"><div class="sec-head"><span class="stripe" style="background:'+g.color+'"></span>'+esc(g.label)+' <span class="count">('+items.length+')</span></div><div class="list">';
       items.forEach(function(t){ html+='<div class="lrow'+(t.status==='DONE'?' done':'')+'" style="--cat:'+catColor(t.category)+'">'+
         selBox(t)+'<div class="sw"></div>'+
-        '<div><div class="lname" contenteditable="true" spellcheck="false" data-id="'+esc(t.id)+'" data-orig="'+esc(t.task)+'" onkeydown="onNameKey(event,this)" onblur="onNameBlur(this)">'+esc(t.task)+'</div><div class="lcat" style="font-size:11.5px;color:var(--muted)">'+elCat(t)+'</div>'+(t.notes?'<div class="lnote">'+esc(t.notes)+'</div>':'')+'</div>'+
+        '<div><div class="lname" contenteditable="true" spellcheck="false" data-id="'+esc(t.id)+'" data-orig="'+esc(t.task)+'" onkeydown="onNameKey(event,this)" onblur="onNameBlur(this)">'+esc(t.task)+'</div><div class="lcat" style="font-size:11.5px;color:var(--muted)">'+elCat(t)+elStake(t)+'</div>'+(t.notes?'<div class="lnote">'+esc(t.notes)+'</div>':'')+'</div>'+
         '<div class="lpri">'+ctlPri(t)+'</div>'+
         '<div class="lstatus2">'+ctlStatus(t)+'</div>'+
         '<div class="lms">'+ctlMs(t)+'</div>'+
