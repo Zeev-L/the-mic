@@ -91,10 +91,10 @@
     .cat-edit{ font-size:11.5px; font-weight:800; color:var(--muted); outline:none; border-radius:4px; padding:1px 3px; min-width:20px; }
     .cat-edit:focus{ background:var(--accent-soft); color:var(--text); }
     .cat-edit:empty:before{ content:'קטגוריה'; color:var(--border-2); }
-    .stake-edit{ font-size:11px; font-weight:700; color:var(--muted); outline:none; border-radius:6px; padding:1px 6px; min-width:16px; border:1px dashed var(--border-2); }
-    .stake-edit:focus{ background:var(--accent-soft); color:var(--text); border-style:solid; }
-    .stake-edit:not(:empty):before{ content:'👤 '; }
-    .stake-edit:empty:before{ content:'＋ בעל עניין'; color:var(--border-2); }
+    .stake-edit{ font-size:11.5px; font-weight:600; color:var(--text); outline:none; border-radius:4px; padding:1px 3px; min-width:14px; }
+    .stake-edit:focus{ background:var(--accent-soft); }
+    .stake-edit:not(:empty):before{ content:'\00a0|\00a0סטייקהולדר:\00a0'; color:var(--muted); font-weight:800; }
+    .stake-edit:empty:before{ content:'\00a0|\00a0＋ סטייקהולדר'; color:var(--border-2); }
     .name{ font-size:14.5px; font-weight:700; margin:2px 0 6px; word-break:break-word; outline:none; border-radius:6px; padding:2px 4px; }
     .name:focus{ background:var(--accent-soft); box-shadow:0 0 0 2px var(--accent-soft); }
     .card.done .name{ text-decoration:line-through; text-decoration-color:#aeb4c0; }
@@ -476,7 +476,7 @@
   function ctlMs(t){ return '<select class="ms-sel" title="מיילסטון" data-id="'+esc(t.id)+'" onchange="onMs(this)"><option value="">◇ ללא מיילסטון</option>'+S.milestones.map(m=>'<option value="'+esc(m.id)+'"'+(t.milestoneId===m.id?' selected':'')+'>'+esc(m.name)+'</option>').join('')+'</select>'; }
   function elName(t){ return '<div class="name" contenteditable="true" spellcheck="false" data-id="'+esc(t.id)+'" data-orig="'+esc(t.task)+'" onkeydown="onNameKey(event,this)" onblur="onNameBlur(this)">'+esc(t.task)+'</div>'; }
   function elCat(t){ return '<span class="cat-edit" contenteditable="true" spellcheck="false" data-id="'+esc(t.id)+'" data-orig="'+esc(t.category||'')+'" onkeydown="onCatKey(event,this)" onblur="onCatBlur(this)">'+esc(t.category||'')+'</span>'; }
-  function elStake(t){ return '<span class="stake-edit" title="בעל עניין" contenteditable="true" spellcheck="false" data-id="'+esc(t.id)+'" data-orig="'+esc(t.stakeholder||'')+'" onkeydown="onStakeKey(event,this)" onblur="onStakeBlur(this)">'+esc(t.stakeholder||'')+'</span>'; }
+  function elStake(t){ return '<span class="stake-edit" title="סטייקהולדר (לחץ לעריכה)" contenteditable="true" spellcheck="false" data-id="'+esc(t.id)+'" data-orig="'+esc(t.stakeholder||'')+'" onkeydown="onStakeKey(event,this)" onblur="onStakeBlur(this)">'+esc(t.stakeholder||'')+'</span>'; }
   function elNote(t){ var enc=encodeURIComponent(t.id); if(t.notes) return '<div class="note clamp" onclick="editNote(this,\''+enc+'\')">'+esc(t.notes)+'</div>'; return '<div class="note add" onclick="editNote(this,\''+enc+'\')">＋ הערה</div>'; }
   function mailBtn(t){ return t.threadId?'<a class="mini" title="פתח מייל" target="_blank" href="https://mail.google.com/mail/u/0/#all/'+encodeURIComponent(t.threadId)+'">📩</a>':''; }
   function calBtn(t){ return '<button class="mini" title="הוסף אירוע ליומן" onclick="openCalModal(\''+encodeURIComponent(t.id)+'\')">🗓️</button>'; }
