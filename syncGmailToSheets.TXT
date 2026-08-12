@@ -278,14 +278,14 @@ function agendaJson_() {
     var today = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd');
     var tasks = [];
     if (sheet && sheet.getLastRow() > 1) {
-      var data = sheet.getRange(2, 1, sheet.getLastRow() - 1, 10).getValues();
+      var data = sheet.getRange(2, 1, sheet.getLastRow() - 1, 11).getValues();
       data.forEach(function(r){
         var status = String(r[3] || 'OPEN').toUpperCase().trim();
         if (status === 'DONE') return;
         var due = dateToStr_(r[5], tz);
         var overdue = /^\d{4}-\d{2}-\d{2}$/.test(due) && due < today;
         if (due === today || overdue) {
-          tasks.push({ id: String(r[0]), category: String(r[1] || ''), task: String(r[2] || ''), status: status, due: due, overdue: overdue });
+          tasks.push({ id: String(r[0]), category: String(r[1] || ''), stakeholder: String(r[10] || ''), task: String(r[2] || ''), status: status, due: due, overdue: overdue });
         }
       });
     }
@@ -350,7 +350,8 @@ function mapTaskRow_(row, tz, todayStr) {
     notes: String(row[6] || ''),
     threadId: String(row[7] || ''),
     start: dateToStr_(row[8], tz),
-    milestoneId: String(row[9] || '')
+    milestoneId: String(row[9] || ''),
+    stakeholder: String(row[10] || '')
   };
 }
 
@@ -376,7 +377,7 @@ function getTasksForWeb() {
   const colors = readColors_(ss);
   if (!sheet || sheet.getLastRow() < 2) return { tasks: [], colors: colors, doneCount: 0 };
 
-  const data = sheet.getRange(2, 1, sheet.getLastRow() - 1, 10).getValues();
+  const data = sheet.getRange(2, 1, sheet.getLastRow() - 1, 11).getValues();
   const tz = Session.getScriptTimeZone();
   const todayStr = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd');
 
@@ -396,7 +397,7 @@ function getDoneTasks() {
   const ss = getSpreadsheet_();
   const sheet = ss.getSheetByName('משימות');
   if (!sheet || sheet.getLastRow() < 2) return [];
-  const data = sheet.getRange(2, 1, sheet.getLastRow() - 1, 10).getValues();
+  const data = sheet.getRange(2, 1, sheet.getLastRow() - 1, 11).getValues();
   const tz = Session.getScriptTimeZone();
   const todayStr = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd');
   return data.map(r => mapTaskRow_(r, tz, todayStr)).filter(t => t.task && t.status === 'DONE');
@@ -442,7 +443,7 @@ function ensureTasksSheet_(ss) {
   var sheet = ss.getSheetByName('משימות');
   if (sheet) return sheet;
   sheet = ss.insertSheet('משימות');
-  var headers = ["Task ID", "קטגוריה", "משימה", "סטטוס", "דחיפות", "תאריך יעד", "הערות", "Thread ID", "תאריך התחלה", "Milestone ID"];
+  var headers = ["Task ID", "קטגוריה", "משימה", "סטטוס", "דחיפות", "תאריך יעד", "הערות", "Thread ID", "תאריך התחלה", "Milestone ID", "בעל עניין"];
   sheet.getRange(1, 1, 1, headers.length)
        .setValues([headers]).setFontWeight('bold').setBackground('#e0e0e0')
        .setBorder(true, true, true, true, true, true);
@@ -454,7 +455,7 @@ function ensureTasksSheet_(ss) {
   return sheet;
 }
 
-function webAddTask(category, task, priority, due, notes) {
+function webAddTask(category, task, priority, due, notes, stakeholder) {
   category = String(category || '').trim();
   task = String(task || '').trim();
   if (!task) throw new Error('חסר שם משימה.');
@@ -471,16 +472,16 @@ function webAddTask(category, task, priority, due, notes) {
   if (due) { try { dueVal = new Date(due); } catch (e) { dueVal = due; } }
 
   // עמודות: A..H כמקודם, ‎I=תאריך התחלה (אוטומטי = היום), J=Milestone ID (ריק)‎
-  const newRow = [taskId, category, task, 'OPEN', String(priority || ''), dueVal, String(notes || ''), '', new Date(), ''];
+  const newRow = [taskId, category, task, 'OPEN', String(priority || ''), dueVal, String(notes || ''), '', new Date(), '', String(stakeholder || '')];
   sheet.insertRowsBefore(2, 1);
-  sheet.getRange(2, 1, 1, 10).setValues([newRow]);
+  sheet.getRange(2, 1, 1, 11).setValues([newRow]);
   applyColors(sheet, ss);
   return getTasksForWeb();
 }
 
 /** מעדכן שדה טקסט/תאריך של משימה. field: 'urgency' | 'due' | 'notes'. */
 function webUpdateField(taskId, field, value) {
-  const colByField = { urgency: 5, due: 6, notes: 7 };
+  const colByField = { urgency: 5, due: 6, notes: 7, stakeholder: 11 };
   const col = colByField[field];
   if (!col) throw new Error('שדה לא חוקי: ' + field);
   const ss = getSpreadsheet_();
@@ -506,8 +507,8 @@ function webUpdateTask(taskId, fields) {
   const sheet = ss.getSheetByName('משימות');
   const row = findRowByTaskId_(sheet, taskId);
   if (row < 0) throw new Error('המשימה לא נמצאה (ייתכן שסונכרנה מחדש).');
-  const rng = sheet.getRange(row, 1, 1, 10);
-  const v = rng.getValues()[0]; // [id, cat, task, status, priority, due, notes, thread, start, milestone]
+  const rng = sheet.getRange(row, 1, 1, 11);
+  const v = rng.getValues()[0]; // [id, cat, task, status, priority, due, notes, thread, start, milestone, stakeholder]
   if (fields.category !== undefined)    v[1] = fields.category;
   if (fields.task !== undefined)        v[2] = fields.task;
   if (fields.status !== undefined)      v[3] = fields.status;
@@ -516,6 +517,7 @@ function webUpdateTask(taskId, fields) {
   if (fields.notes !== undefined)       v[6] = fields.notes;
   if (fields.start !== undefined)       v[8] = fields.start ? new Date(fields.start) : '';
   if (fields.milestoneId !== undefined) v[9] = fields.milestoneId;
+  if (fields.stakeholder !== undefined) v[10] = fields.stakeholder;
   rng.setValues([v]); // עמודה A (v[0]) לא משתנה
   applyColors(sheet, ss);
   return true;
@@ -708,7 +710,7 @@ function syncGmailToSheetsV2() {
   let sheet = ss.getSheetByName("משימות");
   
   // הגדרת הכותרות הקבועות (I=תאריך התחלה, J=Milestone ID נוספו אחרי Thread ID — בלי לגעת בנתונים קיימים)
-  const headers = ["Task ID", "קטגוריה", "משימה", "סטטוס", "דחיפות", "תאריך יעד", "הערות", "Thread ID", "תאריך התחלה", "Milestone ID"];
+  const headers = ["Task ID", "קטגוריה", "משימה", "סטטוס", "דחיפות", "תאריך יעד", "הערות", "Thread ID", "תאריך התחלה", "Milestone ID", "בעל עניין"];
 
   // 1. יצירת גיליון אם לא קיים
   if (!sheet) {
@@ -775,7 +777,11 @@ function syncGmailToSheetsV2() {
     if (parts.length < 2) return;
     
     let category = parts[0].trim();
-    const taskName = parts.slice(1).join(" - ").trim();
+    // 3 חלקים = "קטגוריה - בעל עניין - משימה"; 2 חלקים = "קטגוריה - משימה"
+    let stakeholder = '';
+    let taskName;
+    if (parts.length >= 3) { stakeholder = parts[1].trim(); taskName = parts.slice(2).join(" - ").trim(); }
+    else { taskName = parts.slice(1).join(" - ").trim(); }
     
     // בדיקת עברית (חובה)
     const fullText = category + taskName;
@@ -794,14 +800,14 @@ function syncGmailToSheetsV2() {
 
     // הוספה למאגר — ‎I=תאריך התחלה = תאריך המייל, J=Milestone ID ריק‎
     newRows.push([
-      taskId, category, taskName, "OPEN", "", "", "", threadId, message.getDate(), ""
+      taskId, category, taskName, "OPEN", "", "", "", threadId, message.getDate(), "", stakeholder
     ]);
   });
 
   // --- שלב ד': כתיבת משימות חדשות ---
   if (newRows.length > 0) {
     sheet.insertRowsBefore(2, newRows.length);
-    sheet.getRange(2, 1, newRows.length, 10).setValues(newRows);
+    sheet.getRange(2, 1, newRows.length, 11).setValues(newRows);
   }
 
   // --- שלב ה': סנכרון דו-כיווני ---
@@ -993,14 +999,15 @@ function doPost(e) {
 
     // פיצול "קטגוריה - משימה" (כמו במייל). בלי " - " → הכול שם המשימה.
     var parts = raw.split(' - ');
-    var category = '', task = raw;
-    if (parts.length >= 2) { category = parts[0].trim(); task = parts.slice(1).join(' - ').trim(); }
+    var category = '', stakeholder = '', task = raw;
+    if (parts.length >= 3) { category = parts[0].trim(); stakeholder = parts[1].trim(); task = parts.slice(2).join(' - ').trim(); }
+    else if (parts.length === 2) { category = parts[0].trim(); task = parts[1].trim(); }
     if (!task) return out({ ok:false, error:'empty task' });
 
     // due אופציונלי; אם לא סופק → היום (תאריך התחלה נקבע אוטומטית להיום ב-webAddTask).
     var due = String(p.due || '').trim() || Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd');
 
-    webAddTask(category, task, '', due, '');
+    webAddTask(category, task, '', due, '', stakeholder);
     return out({ ok:true, category: category, task: task, due: due });
   } catch (err) {
     return out({ ok:false, error: String(err) });

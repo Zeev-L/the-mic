@@ -91,6 +91,10 @@
     .cat-edit{ font-size:11.5px; font-weight:800; color:var(--muted); outline:none; border-radius:4px; padding:1px 3px; min-width:20px; }
     .cat-edit:focus{ background:var(--accent-soft); color:var(--text); }
     .cat-edit:empty:before{ content:'קטגוריה'; color:var(--border-2); }
+    .stake-edit{ font-size:11px; font-weight:700; color:var(--muted); outline:none; border-radius:6px; padding:1px 6px; min-width:16px; border:1px dashed var(--border-2); }
+    .stake-edit:focus{ background:var(--accent-soft); color:var(--text); border-style:solid; }
+    .stake-edit:not(:empty):before{ content:'👤 '; }
+    .stake-edit:empty:before{ content:'＋ בעל עניין'; color:var(--border-2); }
     .name{ font-size:14.5px; font-weight:700; margin:2px 0 6px; word-break:break-word; outline:none; border-radius:6px; padding:2px 4px; }
     .name:focus{ background:var(--accent-soft); box-shadow:0 0 0 2px var(--accent-soft); }
     .card.done .name{ text-decoration:line-through; text-decoration-color:#aeb4c0; }
@@ -232,6 +236,7 @@
     <div class="toolbar">
       <div class="field search"><label>חיפוש</label><input type="search" id="search" placeholder="חפש משימה או קטגוריה…"></div>
       <div class="field"><label>קטגוריות</label><div class="ms" id="msCat"></div></div>
+      <div class="field"><label>בעלי עניין</label><div class="ms" id="msStake"></div></div>
       <div class="field"><label>סטטוסים</label><div class="ms" id="msStatus"></div></div>
       <div class="field"><label>קבץ לפי</label>
         <select id="groupBy"><option value="status">סטטוס</option><option value="category">קטגוריה</option><option value="milestone">מיילסטון</option><option value="date">תאריך</option><option value="priority">עדיפות</option></select></div>
@@ -321,7 +326,7 @@
 <script>
   var S = { tasks:[], colors:{}, milestones:[], doneCount:0, doneLoaded:false,
     view:'board', groupBy:'status', sort:'due',
-    filters:{ cats:new Set(), statuses:new Set(), q:'', overdue:false, hideDone:true },
+    filters:{ cats:new Set(), stakes:new Set(), statuses:new Set(), q:'', overdue:false, hideDone:true },
     sel:new Set(), theme:'light', density:'comfortable' };
   var STATUSES=[{key:'OPEN',label:'פתוח',color:'var(--open)',bg:'var(--open-bg)',fg:'var(--open-fg)'},
     {key:'IN PROGRESS',label:'בתהליך',color:'var(--progress)',bg:'var(--prog-bg)',fg:'var(--prog-fg)'},
@@ -420,9 +425,10 @@
   }
   function closeAllPops(){ document.querySelectorAll('.ms-pop.open').forEach(p=>p.classList.remove('open')); }
   document.addEventListener('click',closeAllPops);
-  var msCatApi,msStatusApi;
+  var msCatApi,msStatusApi,msStakeApi;
   function buildFilters(){
     msCatApi=buildMS($('msCat'),function(){ var set={}; S.tasks.forEach(t=>{ if(t.category)set[t.category]=1; }); return Object.keys(set).sort().map(c=>({key:c,label:c,color:catColor(c)})); },S.filters.cats,true);
+    msStakeApi=buildMS($('msStake'),function(){ var set={}; S.tasks.forEach(t=>{ if(t.stakeholder)set[t.stakeholder]=1; }); return Object.keys(set).sort().map(s=>({key:s,label:s,color:'var(--accent)'})); },S.filters.stakes,false);
     msStatusApi=buildMS($('msStatus'),function(){ return STATUSES.map(s=>({key:s.key,label:s.label,color:s.color})); },S.filters.statuses,false);
     var dl=$('catList'); var set={}; S.tasks.forEach(t=>{ if(t.category)set[t.category]=1; }); dl.innerHTML=Object.keys(set).sort().map(c=>'<option value="'+esc(c)+'">').join('');
   }
@@ -432,6 +438,7 @@
     if(f.hideDone && t.status==='DONE') return false;
     if(f.statuses.size && !f.statuses.has(t.status)) return false;
     if(f.cats.size && !f.cats.has(t.category)) return false;
+    if(f.stakes && f.stakes.size && !f.stakes.has(t.stakeholder)) return false;
     if(f.overdue && !isOverdue(t)) return false;
     if(q && (t.task+' '+t.category).toLowerCase().indexOf(q)<0) return false;
     return true; }); }
@@ -469,6 +476,7 @@
   function ctlMs(t){ return '<select class="ms-sel" title="מיילסטון" data-id="'+esc(t.id)+'" onchange="onMs(this)"><option value="">◇ ללא מיילסטון</option>'+S.milestones.map(m=>'<option value="'+esc(m.id)+'"'+(t.milestoneId===m.id?' selected':'')+'>'+esc(m.name)+'</option>').join('')+'</select>'; }
   function elName(t){ return '<div class="name" contenteditable="true" spellcheck="false" data-id="'+esc(t.id)+'" data-orig="'+esc(t.task)+'" onkeydown="onNameKey(event,this)" onblur="onNameBlur(this)">'+esc(t.task)+'</div>'; }
   function elCat(t){ return '<span class="cat-edit" contenteditable="true" spellcheck="false" data-id="'+esc(t.id)+'" data-orig="'+esc(t.category||'')+'" onkeydown="onCatKey(event,this)" onblur="onCatBlur(this)">'+esc(t.category||'')+'</span>'; }
+  function elStake(t){ return '<span class="stake-edit" title="בעל עניין" contenteditable="true" spellcheck="false" data-id="'+esc(t.id)+'" data-orig="'+esc(t.stakeholder||'')+'" onkeydown="onStakeKey(event,this)" onblur="onStakeBlur(this)">'+esc(t.stakeholder||'')+'</span>'; }
   function elNote(t){ var enc=encodeURIComponent(t.id); if(t.notes) return '<div class="note clamp" onclick="editNote(this,\''+enc+'\')">'+esc(t.notes)+'</div>'; return '<div class="note add" onclick="editNote(this,\''+enc+'\')">＋ הערה</div>'; }
   function mailBtn(t){ return t.threadId?'<a class="mini" title="פתח מייל" target="_blank" href="https://mail.google.com/mail/u/0/#all/'+encodeURIComponent(t.threadId)+'">📩</a>':''; }
   function calBtn(t){ return '<button class="mini" title="הוסף אירוע ליומן" onclick="openCalModal(\''+encodeURIComponent(t.id)+'\')">🗓️</button>'; }
@@ -478,7 +486,7 @@
     if(S.view==='board')renderBoard(); else if(S.view==='list')renderList(); else renderRoadmap(); renderBulk(); translatePage(); }
 
   function cardHtml(t){ return '<div class="card'+(t.status==='DONE'?' done':'')+(S.sel.has(t.id)?' sel':'')+'" draggable="true" data-id="'+esc(t.id)+'" style="--cat:'+catColor(t.category)+'">'+
-      selBox(t)+'<div class="ctop">'+ctlPri(t)+elCat(t)+'</div>'+elName(t)+elNote(t)+
+      selBox(t)+'<div class="ctop">'+ctlPri(t)+elCat(t)+elStake(t)+'</div>'+elName(t)+elNote(t)+
       '<div class="crow">'+ctlStatus(t)+mailBtn(t)+calBtn(t)+'</div>'+
       '<div class="crow">'+ctlDue(t)+ctlStart(t)+'</div>'+
       '<div class="crow">'+ctlMs(t)+'</div>'+
@@ -509,6 +517,7 @@
   function rmFilter(t){ var f=S.filters,q=f.q.toLowerCase(); // like visible() but NOT hideDone (we need done for progress)
     if(f.statuses.size && !f.statuses.has(t.status)) return false;
     if(f.cats.size && !f.cats.has(t.category)) return false;
+    if(f.stakes && f.stakes.size && !f.stakes.has(t.stakeholder)) return false;
     if(q && (t.task+' '+t.category).toLowerCase().indexOf(q)<0) return false;
     return true; }
   function taskSpan(t){ var s=isISO(t.start)?t.start:(isISO(t.due)?t.due:todayISO()); var e=isISO(t.due)?t.due:s; if(e<s)e=s; return {s:s,e:e}; }
@@ -553,7 +562,7 @@
   /* ---- drag & drop (cards + bars) ---- */
   var dragId=null;
   function wireDrag(){ document.querySelectorAll('.card,.rmbar').forEach(function(c){
-    c.addEventListener('dragstart',function(e){ if(c.classList.contains('card') && e.target.closest('.name,.cat-edit,.note,.note-edit,select,input,a,button,textarea')){ e.preventDefault(); return; } dragId=c.getAttribute('data-id'); c.classList.add('dragging'); e.dataTransfer.effectAllowed='move'; });
+    c.addEventListener('dragstart',function(e){ if(c.classList.contains('card') && e.target.closest('.name,.cat-edit,.stake-edit,.note,.note-edit,select,input,a,button,textarea')){ e.preventDefault(); return; } dragId=c.getAttribute('data-id'); c.classList.add('dragging'); e.dataTransfer.effectAllowed='move'; });
     c.addEventListener('dragend',function(){ c.classList.remove('dragging'); dragId=null; }); }); }
   window.onDragOver=function(e){ e.preventDefault(); e.currentTarget.classList.add('drop'); };
   window.onDragLeave=function(e){ e.currentTarget.classList.remove('drop'); };
@@ -578,6 +587,8 @@
   window.onNameKey=function(e,el){ if(e.key==='Enter'){ e.preventDefault(); el.blur(); } else if(e.key==='Escape'){ el.textContent=el.getAttribute('data-orig'); el.blur(); } };
   window.onNameBlur=function(el){ var id=el.getAttribute('data-id'); var txt=el.textContent.trim(); var orig=el.getAttribute('data-orig'); if(!txt){ el.textContent=orig; return; } if(txt!==orig){ var t=find(id); if(t)t.task=txt; el.setAttribute('data-orig',txt); setField(id,'task',txt,function(){ toast('עודכן ✓'); }); } };
   window.onCatKey=function(e,el){ if(e.key==='Enter'){ e.preventDefault(); el.blur(); } else if(e.key==='Escape'){ el.textContent=el.getAttribute('data-orig'); el.blur(); } };
+  window.onStakeKey=function(e,el){ if(e.key==='Enter'){ e.preventDefault(); el.blur(); } else if(e.key==='Escape'){ el.textContent=el.getAttribute('data-orig'); el.blur(); } };
+  window.onStakeBlur=function(el){ var id=el.getAttribute('data-id'); var txt=el.textContent.trim(); var orig=el.getAttribute('data-orig'); if(txt!==orig){ var t=find(id); if(t)t.stakeholder=txt; el.setAttribute('data-orig',txt); setField(id,'stakeholder',txt,function(){ buildFilters(); render(); toast('בעל עניין עודכן ✓'); }); } };
   window.onCatBlur=function(el){ var id=el.getAttribute('data-id'); var txt=el.textContent.trim(); var orig=el.getAttribute('data-orig'); if(txt!==orig){ var t=find(id); if(t)t.category=txt; setField(id,'category',txt,function(){ buildFilters(); render(); toast('קטגוריה עודכנה ✓'); }); } };
   window.editNote=function(el,enc){ var id=decodeURIComponent(enc); var t=find(id); if(!t)return; var ta=document.createElement('textarea'); ta.className='note-edit'; ta.value=t.notes||''; ta.placeholder='הערה…'; el.replaceWith(ta); ta.focus();
     ta.addEventListener('keydown',function(e){ if(e.key==='Escape')ta.blur(); });
@@ -602,13 +613,14 @@
   function closePanel(){ $('scrim').classList.remove('show'); $('panel').classList.remove('show'); }
   /* ---- quick add (top bar) — מבנה "קטגוריה - משימה" כמו במייל ---- */
   function parseQuick(text){ var t=String(text||'').trim(); var parts=t.split(' - ');
-    if(parts.length>=2){ return { category:parts[0].trim(), task:parts.slice(1).join(' - ').trim() }; }
-    return { category:'', task:t }; }
+    if(parts.length>=3){ return { category:parts[0].trim(), stakeholder:parts[1].trim(), task:parts.slice(2).join(' - ').trim() }; }
+    if(parts.length===2){ return { category:parts[0].trim(), stakeholder:'', task:parts[1].trim() }; }
+    return { category:'', stakeholder:'', task:t }; }
   function quickAdd(){ var raw=$('qaInput').value.trim(); if(!raw) return;
     var p=parseQuick(raw); if(!p.task){ toast('חסר שם משימה',true); return; }
     var due=$('qaDue').value || todayISO(); // ברירת מחדל: יעד = היום (התחלה נקבעת אוטומטית להיום בשרת)
     $('qaAdd').disabled=true; showOverlay(true);
-    srun('webAddTask',[p.category,p.task,'',due,''],function(res){ S.tasks=res.tasks||[]; S.colors=res.colors||{}; S.doneCount=res.doneCount||0; S.doneLoaded=false; buildFilters(); render();
+    srun('webAddTask',[p.category,p.task,'',due,'',p.stakeholder||''],function(res){ S.tasks=res.tasks||[]; S.colors=res.colors||{}; S.doneCount=res.doneCount||0; S.doneLoaded=false; buildFilters(); render();
       showOverlay(false); $('qaAdd').disabled=false; $('qaInput').value=''; $('qaDue').value=''; $('qaInput').focus(); toast('נוספה: '+p.task+' ✓'); },
       function(e){ showOverlay(false); $('qaAdd').disabled=false; toast('שגיאה: '+e.message,true); }); }
 
@@ -617,7 +629,7 @@
   function openNew(){ $('pTask').value=''; $('pCat').value=''; $('pStart').value=''; $('pDue').value=''; $('pNotes').value=''; fillPriPicker();
     $('pMsSel').innerHTML='<option value="">◇ ללא מיילסטון</option>'+S.milestones.map(m=>'<option value="'+esc(m.id)+'">'+esc(m.name)+'</option>').join(''); openPanel(); setTimeout(()=>$('pTask').focus(),250); }
   function savePanel(){ var task=$('pTask').value.trim(); if(!task){ toast('חסר שם משימה',true); $('pTask').focus(); return; } var cat=$('pCat').value.trim(),pri=$('pPri').dataset.val||'',start=$('pStart').value,due=$('pDue').value,notes=$('pNotes').value,mid=$('pMsSel').value; showOverlay(true);
-    srun('webAddTask',[cat,task,pri,due,notes],function(res){ S.tasks=res.tasks||[]; S.colors=res.colors||{}; S.doneCount=res.doneCount||0; S.doneLoaded=false; buildFilters();
+    srun('webAddTask',[cat,task,pri,due,notes,''],function(res){ S.tasks=res.tasks||[]; S.colors=res.colors||{}; S.doneCount=res.doneCount||0; S.doneLoaded=false; buildFilters();
       // post-set start (override auto-today if user picked) + milestone, by finding the new task id
       var nt=S.tasks.find(x=>x.task===task && x.category===cat);
       var after=function(){ render(); showOverlay(false); closePanel(); toast('משימה נוספה ✓'); };
